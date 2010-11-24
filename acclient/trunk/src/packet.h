@@ -17,42 +17,43 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-// mainwindow.h: definition of the MainWindow class
+// packet.h: definition of the Packet class
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef PACKET_H
+#define PACKET_H
 
-#include <QMainWindow>
+#include <QObject>
+#include <QTcpSocket>
+#include <stdint.h>
 
-#include "networkmanager.h"
+#define PACKET_BUFFER_MAX	1024
+#define PACKET_STRING_MAX	PACKET_BUFFER_MAX-2
 
-namespace Ui {
-    class MainWindow;
-}
-
-class MainWindow: public QMainWindow {
-    Q_OBJECT
-
-    public:
-		explicit MainWindow(QWidget *parent = 0);
-		~MainWindow();
-
-    private slots:
-		void onConnect();
-		void onDisconnect();
-
-		void onNetAuth();
-		void onNetConnected();
-		void onNetDisconnected();
-		void onNetMessage(QString);
-
-		void onQuit();
-		void onAbout();
-
-    private:
-		NetworkManager *m_Network;
+class Packet: public QObject {
+	Q_OBJECT
+	
+	public:
+		Packet();
 		
-		Ui::MainWindow *ui;
-};
+		void clear();
+		
+		void addByte(uint8_t n);
+		void addUint16(uint16_t n);
+		void addUint32(uint32_t n);
+		void addString(const QString &str);
+		
+		uint8_t byte();
+		uint16_t uint16();
+		uint32_t uint32();
+		QString string();
+		
+		bool read(QTcpSocket *sock);
+		bool write(QTcpSocket *sock);
+		
+	private:
+		uint8_t m_Buffer[PACKET_BUFFER_MAX];
+		int m_Size;
+		int m_Pos;
+};		
 
-#endif // MAINWINDOW_H
+#endif

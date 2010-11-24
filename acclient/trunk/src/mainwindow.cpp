@@ -19,6 +19,7 @@
  ***************************************************************************/
 // mainwindow.cpp: implementation of MainWindow class
 
+#include "logindialog.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
@@ -31,6 +32,13 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionConnect, SIGNAL(triggered()), this, SLOT(onConnect()));
     connect(ui->actionDisconnect, SIGNAL(triggered()), this, SLOT(onDisconnect()));
     connect(ui->actionQuit, SIGNAL(triggered()), this, SLOT(onQuit()));
+		
+	// allocate the network manager
+	m_Network=new NetworkManager(this);
+	connect(m_Network, SIGNAL(authenticate()), this, SLOT(onNetAuth()));
+	connect(m_Network, SIGNAL(connected()), this, SLOT(onNetConnected()));
+	connect(m_Network, SIGNAL(disconnected()), this, SLOT(onNetDisconnected()));
+	connect(m_Network, SIGNAL(message(QString)), this, SLOT(onNetMessage(QString)));
 }
 
 MainWindow::~MainWindow() {
@@ -38,19 +46,31 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::onConnect() {
-
+	m_Network->connect("127.0.0.1", 9090);
 }
 
 void MainWindow::onDisconnect() {
-
+	m_Network->disconnect();
 }
 
-void MainWindow::onNetConnect() {
+void MainWindow::onNetAuth() {
+	LoginDialog ld(this);
+	if (ld.exec()==QDialog::Accepted)
+		m_Network->performLogin(ld.username(), ld.password());
+	else
+		m_Network->terminate();
+}
+
+void MainWindow::onNetConnected() {
     statusBar()->showMessage(tr("Connected to server"));
 }
 
 void MainWindow::onNetDisconnected() {
     statusBar()->showMessage(tr("Disconnected from server"));
+}
+
+void MainWindow::onNetMessage(QString msg) {
+	statusBar()->showMessage(msg);
 }
 
 void MainWindow::onQuit() {
