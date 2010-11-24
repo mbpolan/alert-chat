@@ -17,17 +17,11 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-// usermanager.h: definition of the UserManager class
+// user.cpp: implementation of User class
 
-#ifndef USERMANAGER_H
-#define USERMANAGER_H
+#include "user.h"
 
-#include <iostream>
-
-class UserManager {
-	public:
-		UserManager();
-};
-
-#endif
-
+User::User(const std::string &displayName, const std::string &password) {
+	m_DisplayName=displayName;
+	m_Password=password;
+}

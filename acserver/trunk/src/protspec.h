@@ -17,17 +17,19 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-// usermanager.h: definition of the UserManager class
+// protspec.h: unified client-server protocol specification
 
-#ifndef USERMANAGER_H
-#define USERMANAGER_H
+#ifndef PROTSPEC_H
+#define PROTSPEC_H
 
-#include <iostream>
+// login and logout
+#define PROT_LOGIN		0x01
+#define PROT_LOGOUT		0x02
 
-class UserManager {
-	public:
-		UserManager();
-};
+// client messages
+#define PROT_CLIENTMSG	0x10
+
+// authentication
+#define PROT_REQAUTH	0x20
 
 #endif
-

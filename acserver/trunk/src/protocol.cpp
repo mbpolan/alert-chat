@@ -17,17 +17,47 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-// usermanager.h: definition of the UserManager class
+// protocol.cpp: implementation of Protocol class
 
-#ifndef USERMANAGER_H
-#define USERMANAGER_H
+#include "packet.h"
+#include "protocol.h"
+#include "protspec.h"
 
-#include <iostream>
+Protocol::Protocol(Socket fd) {
+	m_Socket=fd;
+}
 
-class UserManager {
-	public:
-		UserManager();
-};
+bool Protocol::authenticate() {
+	Packet a, p;
+	
+	// send the authentication requirement packet
+	a.addByte(PROT_REQAUTH);
+	if (!a.write(m_Socket))
+		return false;
+	
+	// check for the login packet
+	if (p.read(m_Socket)) {
+		
+		// we're expecting the login packet ONLY
+		uint8_t header=p.byte();
+		if (header==(char) PROT_LOGIN) {
+			std::string username=p.string();
+			std::string password=p.string();
+				
+			std::cout << "Username: " << username << ", password: " << password << std::endl;
+			
+			// TODO: authentication via database or file
+			
+			return true;
+		}
+	}
+	
+	return false;
+}
 
-#endif
-
+void Protocol::relay() {
+	Packet p;
+	while(p.read(m_Socket)) {
+		
+	}
+}

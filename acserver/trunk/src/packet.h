@@ -17,17 +17,42 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-// usermanager.h: definition of the UserManager class
+// packet.h: definitions of Packet class
 
-#ifndef USERMANAGER_H
-#define USERMANAGER_H
+#ifndef PACKET_H
+#define PACKET_H
 
 #include <iostream>
+#include <stdint.h>
 
-class UserManager {
+#include "definitions.h"
+
+#define PACKET_BUFFER_MAX	1024
+#define PACKET_STRING_MAX	PACKET_BUFFER_MAX-2
+
+class Packet {
 	public:
-		UserManager();
+		Packet();
+		
+		void clear();
+		
+		void addByte(uint8_t byte);
+		void addUint16(uint16_t n);
+		void addUint32(uint32_t n);
+		void addString(const std::string &str);
+	
+		uint8_t byte();
+		uint16_t uint16();
+		uint32_t uint32();
+		std::string string();
+		
+		bool write(Socket sock);
+		bool read(Socket socket);
+	
+	private:
+		uint8_t m_Buffer[PACKET_BUFFER_MAX];
+		short m_Size;
+		int m_Pos;
 };
 
 #endif
-
