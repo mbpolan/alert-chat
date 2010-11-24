@@ -22,6 +22,9 @@
 #include <iostream>
 
 #include "definitions.h"
+#include "packet.h"
+#include "protocol.h"
+#include "protspec.h"
 #include "serversocket.h"
 #include "threadpool.h"
 #include "usermanager.h"
@@ -30,11 +33,26 @@ UserManager *g_UserManager;
 
 void* connectionHandler(void *param) {
 	Socket fd=(Socket) param;
+	Protocol p(fd);
+	
+	// attempt to authenticate the user, and if so, begin communication relay
+	if (!p.authenticate()) {
+		// send error message
+		Packet ret;
+		ret.addByte(PROT_CLIENTMSG);
+		ret.addString("Incorrect username or password.");
+		
+		ret.write(fd);
+	}
+	
+	else
+		p.relay();
 	
 	// close the socket if still necessary
 	if (fd>0)
 		closeSocket(fd);
 	
+	std::cout << "Disconnected\n";
 	exitThread();
 }
 
@@ -53,6 +71,7 @@ int main(int argc, char *argv[]) {
 	
 	catch (ServerSocket::Exception &e) {
 		std::cout << "Error: " << e.what() << std::endl;
+		exit(0);
 	}
 	
 	std::cout << "Alert Chat server " << VERSION << " running...\n";

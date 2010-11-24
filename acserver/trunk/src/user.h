@@ -17,17 +17,25 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-// usermanager.h: definition of the UserManager class
+// user.h: definition of the User class
 
-#ifndef USERMANAGER_H
-#define USERMANAGER_H
+#ifndef USER_H
+#define USER_H
 
 #include <iostream>
+#include <list>
 
-class UserManager {
+class User {
 	public:
-		UserManager();
+		User(const std::string &displayName, const std::string &password);
+	
+		std::list<std::string> friends() const { return m_FriendList; }
+	
+	private:
+		std::string m_DisplayName;
+		std::string m_Password;
+		
+		std::list<std::string> m_FriendList;
 };
 
 #endif
-

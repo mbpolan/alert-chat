@@ -17,17 +17,22 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-// usermanager.h: definition of the UserManager class
+// protocol.h: definition of Protocol class
 
-#ifndef USERMANAGER_H
-#define USERMANAGER_H
+#ifndef PROTOCOL_H
+#define PROTOCOL_H
 
-#include <iostream>
+#include "definitions.h"
 
-class UserManager {
+class Protocol {
 	public:
-		UserManager();
+		Protocol(Socket fd);
+		
+		bool authenticate();
+		void relay();
+	
+	private:
+		Socket m_Socket;
 };
 
 #endif
-
