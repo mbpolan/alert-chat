@@ -25,23 +25,37 @@
 #include <QObject>
 #include <QTcpSocket>
 
+#include "packet.h"
+
 class NetworkManager : public QObject {
     Q_OBJECT
     public:
-	explicit NetworkManager(QObject *parent=NULL);
-	~NetworkManager();
+		explicit NetworkManager(QObject *parent=NULL);
+		~NetworkManager();
 
-	void connect(const QString &host, int port);
-	void performLogin(const QString &username, const QString &password);
-	void disconnect();
-
+		void connect(const QString &host, int port);
+		void performLogin(const QString &username, const QString &password);
+		void disconnect();
+		
+		void terminate();
+	
     signals:
-	void authenticate();
-	void connected();
-	void disconnected();
+		void authenticate();
+		void connected();
+		void disconnected();
+		void message(QString);
+	
+	private slots:
+		void onConnected();
+		void onDisconnected();
+		void onSocketError(QAbstractSocket::SocketError);
+		void onSocketState(QAbstractSocket::SocketState);
+		void onDataReady();
 
     private:
-	QTcpSocket *m_Socket;
+		void handlePacket(Packet &p);
+		
+		QTcpSocket *m_Socket;
 };
 
 #endif // NETWORKMANAGER_H

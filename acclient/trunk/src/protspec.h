@@ -17,42 +17,19 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-// mainwindow.h: definition of the MainWindow class
+// protspec.h: unified client-server protocol specification
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef PROTSPEC_H
+#define PROTSPEC_H
 
-#include <QMainWindow>
+// login and logout
+#define PROT_LOGIN		0x01
+#define PROT_LOGOUT		0x02
 
-#include "networkmanager.h"
+// client messages
+#define PROT_CLIENTMSG	0x10
 
-namespace Ui {
-    class MainWindow;
-}
+// authentication
+#define PROT_REQAUTH	0x20
 
-class MainWindow: public QMainWindow {
-    Q_OBJECT
-
-    public:
-		explicit MainWindow(QWidget *parent = 0);
-		~MainWindow();
-
-    private slots:
-		void onConnect();
-		void onDisconnect();
-
-		void onNetAuth();
-		void onNetConnected();
-		void onNetDisconnected();
-		void onNetMessage(QString);
-
-		void onQuit();
-		void onAbout();
-
-    private:
-		NetworkManager *m_Network;
-		
-		Ui::MainWindow *ui;
-};
-
-#endif // MAINWINDOW_H
+#endif
