@@ -44,7 +44,7 @@ class MainWindow: public QMainWindow {
 		void onNetAuth();
 		void onNetConnected();
 		void onNetDisconnected();
-		void onNetMessage(QString);
+		void onNetMessage(QString, bool);
 
 		void onQuit();
 		void onAbout();

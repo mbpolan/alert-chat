@@ -77,15 +77,15 @@ void NetworkManager::onDisconnected() {
 void NetworkManager::onSocketError(QAbstractSocket::SocketError error) {
 	switch(error) {
 		case QAbstractSocket::HostNotFoundError: {
-			emit message("Error: unable to find host");
+			emit message("Error: unable to find host", true);
 		} break;
 		
 		case QAbstractSocket::ConnectionRefusedError: {
-			emit message("Error: connection refused");
+			emit message("Error: connection refused", true);
 		} break;
 		
 		default: {
-			emit message(QString("Error code: %1").arg(error));
+			emit message(QString("Error code: %1").arg(error), true);
 		} break;
 	}
 }
@@ -93,19 +93,19 @@ void NetworkManager::onSocketError(QAbstractSocket::SocketError error) {
 void NetworkManager::onSocketState(QAbstractSocket::SocketState state) {
 	switch(state) {
 		case QAbstractSocket::HostLookupState: {
-			emit message("Looking up host...");
+			emit message("Looking up host...", true);
 		} break;
 		
 		case QAbstractSocket::ConnectingState: {
-			emit message("Connecting...");
+			emit message("Connecting...", true);
 		} break;
 		
 		case QAbstractSocket::ConnectedState: {
-			emit message("Connected");
+			emit message("Connected", true);
 		} break;
 		
 		case QAbstractSocket::UnconnectedState: {
-			emit message("Disconnected");
+			emit message("Disconnected", true);
 		} break;
 		
 		default: break;
@@ -128,6 +128,9 @@ void NetworkManager::handlePacket(Packet &p) {
 	switch(header) {
 		// server requires authentication
 		case PROT_REQAUTH: emit authenticate(); break;
+		
+		// text message from the server
+		case PROT_CLIENTMSG: emit message(p.string(), false); break;
 		
 		default: qDebug() << "Unknown header: " << header; break;
 	}
