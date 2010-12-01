@@ -43,7 +43,7 @@ class NetworkManager : public QObject {
 		void authenticate();
 		void connected();
 		void disconnected();
-		void message(QString);
+		void message(QString, bool);
 	
 	private slots:
 		void onConnected();

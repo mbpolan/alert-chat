@@ -19,6 +19,8 @@
  ***************************************************************************/
 // mainwindow.cpp: implementation of MainWindow class
 
+#include <QMessageBox>
+
 #include "logindialog.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -38,7 +40,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(m_Network, SIGNAL(authenticate()), this, SLOT(onNetAuth()));
 	connect(m_Network, SIGNAL(connected()), this, SLOT(onNetConnected()));
 	connect(m_Network, SIGNAL(disconnected()), this, SLOT(onNetDisconnected()));
-	connect(m_Network, SIGNAL(message(QString)), this, SLOT(onNetMessage(QString)));
+	connect(m_Network, SIGNAL(message(QString,bool)), this, SLOT(onNetMessage(QString,bool)));
 }
 
 MainWindow::~MainWindow() {
@@ -46,6 +48,8 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::onConnect() {
+	ui->actionConnect->setEnabled(false);
+	ui->actionDisconnect->setEnabled(true);
 	m_Network->connect("127.0.0.1", 9090);
 }
 
@@ -66,11 +70,17 @@ void MainWindow::onNetConnected() {
 }
 
 void MainWindow::onNetDisconnected() {
-    statusBar()->showMessage(tr("Disconnected from server"));
+	statusBar()->showMessage(tr("Disconnected from server"));
+	ui->actionConnect->setEnabled(true);
+	ui->actionDisconnect->setEnabled(false);
+
 }
 
-void MainWindow::onNetMessage(QString msg) {
-	statusBar()->showMessage(msg);
+void MainWindow::onNetMessage(QString msg, bool passive) {
+	if (passive)
+		statusBar()->showMessage(msg);
+	else
+		QMessageBox::information(this, tr("Message"), msg);
 }
 
 void MainWindow::onQuit() {
