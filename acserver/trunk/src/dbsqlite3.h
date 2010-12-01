@@ -17,72 +17,46 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-// protocol.cpp: implementation of Protocol class
+// dbsqlite3.h: declaration of the DatabaseSQLite3 class
 
-#include "dbsqlite3.h"
-#include "packet.h"
-#include "protocol.h"
-#include "protspec.h"
+#ifndef DBSQLITE3_H
+#define DBSQLITE3_H
 
-Protocol::Protocol(Socket fd) {
-	m_Socket=fd;
-}
+#include <cstdlib>
+#include <iostream>
+#include <sqlite3.h>
 
-bool Protocol::authenticate() {
-	Packet a, p;
-	
-	// send the authentication requirement packet
-	a.addByte(PROT_REQAUTH);
-	if (!a.write(m_Socket))
-		return false;
-	
-	// check for the login packet
-	if (p.read(m_Socket)) {
-		
-		// we're expecting the login packet ONLY
-		uint8_t header=p.byte();
-		if (header==(char) PROT_LOGIN) {
-			std::string username=p.string();
-			std::string password=p.string();
-			
-			DatabaseSQLite3 db;
-			if (!db.open("data.db"))
-				std::cout << "WARNING: unable to open database!\n";
-			
-			else {
-				std::string sql="SELECT * FROM users WHERE username='";
-				sql+=username;
-				sql+="' AND password='";
-				sql+=password;
-				sql+="'";
-				
-				// query the database and see if the user's credentials were valid
-				QueryResult *res=db.query(sql);
-				if (!res) {
-					std::cout << "WARNING: query was NULL!\n";
-					db.close();
-					
-					delete res;
-					return false;
-				}
-				
-				int rows=res->rows;
+#include "database.h"
 
-				db.close();
-				delete res;
-				
-				return (rows!=0);
-				
-			}
+class QueryResult {
+	public:
+		QueryResult() {
+			table=NULL;
+			error=NULL;
 		}
-	}
-	
-	return false;
-}
-
-void Protocol::relay() {
-	Packet p;
-	while(p.read(m_Socket)) {
 		
-	}
-}
+		~QueryResult() {
+			sqlite3_free_table(table);
+			if (error) free(error);
+		}
+		
+		char **table;
+		char *error;
+		int rows;
+		int cols;
+};
+
+class DatabaseSQLite3: public Database {
+	public:
+		DatabaseSQLite3();
+		
+		bool open(const std::string &file);
+		bool close();
+		
+		QueryResult* query(const std::string &sql);
+	
+	private:
+		sqlite3 *m_Handle;
+};
+
+#endif
