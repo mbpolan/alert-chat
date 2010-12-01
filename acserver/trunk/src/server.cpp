@@ -19,6 +19,7 @@
  ***************************************************************************/
 // server.cpp: implementation of main server program
 
+#include <cstdlib>
 #include <iostream>
 
 #include "definitions.h"

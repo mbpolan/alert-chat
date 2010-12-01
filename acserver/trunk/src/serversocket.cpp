@@ -20,6 +20,8 @@
 // serversocket.cpp: implementation of the ServerSocket class
 
 #include <arpa/inet.h>
+#include <cstring>
+#include <cstdlib>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -70,7 +72,7 @@ void ServerSocket::bind(char *port) throw (Exception&) {
 	
 	// perform some error checking at this point
 	if (ret<0)
-		throw("Unable to bind socket to address and port");
+		throw Exception("Unable to bind socket to address and port");
 }
 
 void ServerSocket::listen() throw(Exception&) {
@@ -87,11 +89,16 @@ int ServerSocket::accept(std::string &clientIp) {
 	
 	if (client.ss_family==AF_INET) {
 		struct sockaddr_in *data=(struct sockaddr_in*) &client;
-		clientIp=inet_ntoa(data->sin_addr);	}
+
+		char str[INET_ADDRSTRLEN];
+		clientIp=inet_ntop(AF_INET, &data->sin_addr, str, INET_ADDRSTRLEN);
+	}
 	
 	else {
 		struct sockaddr_in6 *data=(struct sockaddr_in6*) &client;
-		//clientIp=inet_ntoa(data->sin6_addr);
+
+		char str[INET6_ADDRSTRLEN];
+		clientIp=inet_ntop(AF_INET6, &data->sin6_addr, str, INET6_ADDRSTRLEN);
 	}
 	
 	return fd;

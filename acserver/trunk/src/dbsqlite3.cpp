@@ -17,72 +17,30 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-// protocol.cpp: implementation of Protocol class
+// dbsqlite3.cpp: implementation of the DatabaseSQLite3 class
 
 #include "dbsqlite3.h"
-#include "packet.h"
-#include "protocol.h"
-#include "protspec.h"
 
-Protocol::Protocol(Socket fd) {
-	m_Socket=fd;
+DatabaseSQLite3::DatabaseSQLite3() {
+	m_Handle=NULL;
 }
 
-bool Protocol::authenticate() {
-	Packet a, p;
-	
-	// send the authentication requirement packet
-	a.addByte(PROT_REQAUTH);
-	if (!a.write(m_Socket))
+bool DatabaseSQLite3::open(const std::string &file) {
+	if (sqlite3_open_v2(file.c_str(), &m_Handle, SQLITE_OPEN_READONLY, NULL)!=SQLITE_OK) {
+		sqlite3_close(m_Handle);
 		return false;
-	
-	// check for the login packet
-	if (p.read(m_Socket)) {
-		
-		// we're expecting the login packet ONLY
-		uint8_t header=p.byte();
-		if (header==(char) PROT_LOGIN) {
-			std::string username=p.string();
-			std::string password=p.string();
-			
-			DatabaseSQLite3 db;
-			if (!db.open("data.db"))
-				std::cout << "WARNING: unable to open database!\n";
-			
-			else {
-				std::string sql="SELECT * FROM users WHERE username='";
-				sql+=username;
-				sql+="' AND password='";
-				sql+=password;
-				sql+="'";
-				
-				// query the database and see if the user's credentials were valid
-				QueryResult *res=db.query(sql);
-				if (!res) {
-					std::cout << "WARNING: query was NULL!\n";
-					db.close();
-					
-					delete res;
-					return false;
-				}
-				
-				int rows=res->rows;
-
-				db.close();
-				delete res;
-				
-				return (rows!=0);
-				
-			}
-		}
 	}
 	
-	return false;
+	return true;
 }
 
-void Protocol::relay() {
-	Packet p;
-	while(p.read(m_Socket)) {
-		
-	}
+bool DatabaseSQLite3::close() {
+	return (sqlite3_close(m_Handle)==SQLITE_OK);
+}
+
+QueryResult* DatabaseSQLite3::query(const std::string &sql) {
+	QueryResult *res=new QueryResult;
+	
+	sqlite3_get_table(m_Handle, sql.c_str(), &res->table, &res->rows, &res->cols, &res->error);
+	return res;
 }
