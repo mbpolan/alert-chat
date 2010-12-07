@@ -22,6 +22,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QList>
 #include <QMainWindow>
 
 #include "networkmanager.h"
@@ -45,6 +46,7 @@ class MainWindow: public QMainWindow {
 		void onNetConnected();
 		void onNetDisconnected();
 		void onNetMessage(QString, bool);
+		void onNetUpdateFriendList(QList<QString>);
 
 		void onQuit();
 		void onAbout();

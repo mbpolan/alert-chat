@@ -131,7 +131,22 @@ void NetworkManager::handlePacket(Packet &p) {
 		
 		// text message from the server
 		case PROT_CLIENTMSG: emit message(p.string(), false); break;
+
+		// an updated friend list arrived
+		case PROT_FRIENDLIST: serverSentFriendList(p); break;
 		
 		default: qDebug() << "Unknown header: " << header; break;
 	}
+}
+
+void NetworkManager::serverSentFriendList(Packet &p) {
+    // first is the length of the list
+    int length=p.uint16();
+
+    // parse the usernames
+    QList<QString> friends;
+    for (int i=0; i<length; i++)
+	  friends.append(p.string());
+
+    emit updateFriendList(friends);
 }
