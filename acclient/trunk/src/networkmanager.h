@@ -22,6 +22,7 @@
 #ifndef NETWORKMANAGER_H
 #define NETWORKMANAGER_H
 
+#include <QList>
 #include <QObject>
 #include <QTcpSocket>
 
@@ -44,6 +45,7 @@ class NetworkManager : public QObject {
 		void connected();
 		void disconnected();
 		void message(QString, bool);
+		void updateFriendList(QList<QString>);
 	
 	private slots:
 		void onConnected();
@@ -54,6 +56,7 @@ class NetworkManager : public QObject {
 
     private:
 		void handlePacket(Packet &p);
+		void serverSentFriendList(Packet &p);
 		
 		QTcpSocket *m_Socket;
 };

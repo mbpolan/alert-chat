@@ -32,4 +32,10 @@
 // authentication
 #define PROT_REQAUTH	0x20
 
+// friend lists and status updates
+#define PROT_FRIENDLIST	0x25
+
+// peer to peer communication
+#define PROT_TEXTMESSAGE	0x40
+
 #endif

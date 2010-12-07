@@ -29,7 +29,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
 
-    // connect actions
+     // connect actions
     connect(ui->actionAbout, SIGNAL(triggered()), this, SLOT(onAbout()));
     connect(ui->actionConnect, SIGNAL(triggered()), this, SLOT(onConnect()));
     connect(ui->actionDisconnect, SIGNAL(triggered()), this, SLOT(onDisconnect()));
@@ -41,6 +41,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(m_Network, SIGNAL(connected()), this, SLOT(onNetConnected()));
 	connect(m_Network, SIGNAL(disconnected()), this, SLOT(onNetDisconnected()));
 	connect(m_Network, SIGNAL(message(QString,bool)), this, SLOT(onNetMessage(QString,bool)));
+	connect(m_Network, SIGNAL(updateFriendList(QList<QString>)), this, SLOT(onNetUpdateFriendList(QList<QString>)));
 }
 
 MainWindow::~MainWindow() {
@@ -50,6 +51,7 @@ MainWindow::~MainWindow() {
 void MainWindow::onConnect() {
 	ui->actionConnect->setEnabled(false);
 	ui->actionDisconnect->setEnabled(true);
+
 	m_Network->connect("127.0.0.1", 9090);
 }
 
@@ -81,6 +83,11 @@ void MainWindow::onNetMessage(QString msg, bool passive) {
 		statusBar()->showMessage(msg);
 	else
 		QMessageBox::information(this, tr("Message"), msg);
+}
+
+void MainWindow::onNetUpdateFriendList(QList<QString> lst) {
+    // TODO: update the friend list tree
+    qDebug() << lst;
 }
 
 void MainWindow::onQuit() {
