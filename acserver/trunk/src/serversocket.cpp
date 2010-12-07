@@ -26,6 +26,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sstream>
 
 #include "serversocket.h"
 
@@ -37,7 +38,7 @@ void ServerSocket::close() {
 	::close(m_Socket);
 }
 
-void ServerSocket::bind(char *port) throw (Exception&) {
+void ServerSocket::bind(const std::string &ip, int port) throw (Exception&) {
 	m_Socket=socket(PF_INET, SOCK_STREAM, 0);
 	if (m_Socket<0)
 		throw Exception("Unable to create socket");
@@ -56,12 +57,16 @@ void ServerSocket::bind(char *port) throw (Exception&) {
 	hints.ai_socktype=SOCK_STREAM;
 	hints.ai_flags=AI_PASSIVE;
 	
+	// for the dumb reason that the port has to be an array for the getaddrinfo function
+	std::stringstream ss;
+	ss << port;
+
 	int ret;
-	if (getaddrinfo(NULL, port, &hints, &ai)<0) {
+	if (getaddrinfo((ip=="any" ? NULL : ip.c_str()), ss.str().c_str(), &hints, &ai)<0) {
 		// do it ourselves
 		addr.sin_family=AF_INET;
-		addr.sin_port=htons(atoi(port));
-		addr.sin_addr.s_addr=INADDR_ANY;
+		addr.sin_port=htons(port);
+		addr.sin_addr.s_addr=(ip=="any" ? INADDR_ANY : inet_addr(ip.c_str()));
 		memset(&addr.sin_zero, '\0', sizeof(addr.sin_zero));
 		
 		ret=::bind(m_Socket, (struct sockaddr*) &addr, sizeof(struct sockaddr_in));

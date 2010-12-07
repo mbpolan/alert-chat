@@ -20,9 +20,12 @@
 // server.cpp: implementation of main server program
 
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 
+#include "configmanager.h"
 #include "definitions.h"
+#include "dbsqlite3.h"
 #include "packet.h"
 #include "protocol.h"
 #include "protspec.h"
@@ -30,14 +33,17 @@
 #include "threadpool.h"
 #include "usermanager.h"
 
+ConfigManager *g_ConfigManager;
 UserManager *g_UserManager;
 
+// thread routine for handling a new connection from a user
 void* connectionHandler(void *param) {
 	Socket fd=(Socket) param;
 	Protocol p(fd);
 	
-	// attempt to authenticate the user, and if so, begin communication relay
-	if (!p.authenticate()) {
+	// attempt to authenticate the user first
+	std::string username, password;
+	if (!p.authenticate(username, password)) {
 		// send error message
 		Packet ret;
 		ret.addByte(PROT_CLIENTMSG);
@@ -46,8 +52,28 @@ void* connectionHandler(void *param) {
 		ret.write(fd);
 	}
 	
-	else
+	else {
+		// allocate a user object for this user
+		User *user=new User(username, password);
+		user->setProtocol(&p);
+		UserManager::defaultManager()->addUser(user);
+
+		// get this user's friend list
+		DatabaseSQLite3 db("data.db");
+		if (db.open()) {
+			std::list<std::string> friends=db.getFriendList(username);
+			user->setFriendList(friends);
+
+			user->sendFriendList();
+
+			db.close();
+		}
+
+		// begin communications relay
 		p.relay();
+
+		UserManager::defaultManager()->removeUser(user);
+	}
 	
 	// close the socket if still necessary
 	if (fd>0)
@@ -58,28 +84,50 @@ void* connectionHandler(void *param) {
 }
 
 int main(int argc, char *argv[]) {
-	if (argc<2) {
-		std::cout << "Usage: server <port>\n";
-		return 0;
+	if (argc>1) {
+		// show a help message
+		if (strcmp(argv[1], "--help")==0) {
+			std::cout << "Usage: acserver [--help] [--version]\n";
+			std::cout << "\nThe server loads all configuration data from server.conf. Check ";
+			std::cout << "the aforementioned file for some brief documentation.\n\n";
+			std::cout << "Website: http://alert-chat.sf.net\n";
+		}
+
+		// show the version string
+		else if (strcmp(argv[1], "--version")==0)
+			std::cout << VERSION << std::endl;
+
+		exit(0);
 	}
 	
+	// load our configuration file
+	g_ConfigManager=new ConfigManager("server.conf");
+	if (!g_ConfigManager->parse()) {
+		std::cout << "Error: unable to open server.conf for parsing!\n";
+		exit(1);
+	}
+
 	// setup a server socket for incoming connections
 	ServerSocket sock;
 	try {
-		sock.bind(argv[1]);
+		sock.bind(g_ConfigManager->valueForKey("ip").toString(),
+				  g_ConfigManager->valueForKey("port").toInt());
 		sock.listen();
 	}
 	
 	catch (ServerSocket::Exception &e) {
 		std::cout << "Error: " << e.what() << std::endl;
-		exit(0);
+		exit(1);
 	}
 	
 	std::cout << "Alert Chat server " << VERSION << " running...\n";
 	
 	// so far so good; create a thread pool for new connections
-	ThreadPool pool(MAX_CONNECTIONS);
+	ThreadPool pool;
 	
+	// and the corresponding manager for users
+	g_UserManager=new UserManager;
+
 	// accept incoming connections
 	while(1) {
 		std::string ip;
@@ -99,7 +147,10 @@ int main(int argc, char *argv[]) {
 	
 	// close the socket and join all active threads
 	sock.close();
-	pool.drain();
 	
+	// destroy managers
+	delete g_ConfigManager;
+	delete g_UserManager;
+
 	return 0;
 }

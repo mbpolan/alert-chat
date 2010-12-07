@@ -22,18 +22,28 @@
 #ifndef THREAD_H
 #define THREAD_H
 
+namespace Threads {
+
 #ifdef __LINUX__
 #include <pthread.h>
+
+typedef pthread_t thread_t;
+typedef pthread_mutex_t mutex_t;
+
+#define createMutex(x) pthread_mutex_init(x, NULL)
+#define destroyMutex(x) pthread_mutex_destroy(x)
 
 #define lock(x) pthread_mutex_lock(x)
 #define unlock(x) pthread_mutex_unlock(x)
 #define exitThread() pthread_exit(NULL)
 
-typedef pthread_t thread_t;
-typedef pthread_mutex_t mutex_t;
-
 typedef void* (*ThreadFunc)(void*);
 
+// global array of mutexes and defines
+#define MUTEX_USERMANAGER	0
+#define TOTAL_MUTEXES		1
+
+static mutex_t g_Mutexes[TOTAL_MUTEXES];
 
 // create a new thread with given routine and parameter
 static thread_t createThread(ThreadFunc routine, void *param, int &status) {
@@ -56,6 +66,8 @@ static void joinThread(thread_t handle) {
 }
 
 #endif // __LINUX__
+
+} // namespace Threads
 
 #endif
 

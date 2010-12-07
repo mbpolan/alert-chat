@@ -25,14 +25,30 @@
 #include <iostream>
 #include <list>
 
+#include "protocol.h"
+
 class User {
 	public:
-		User(const std::string &displayName, const std::string &password);
+		User(const std::string &username, const std::string &password);
+
+		void setProtocol(Protocol *p) { m_ComProtocol=p; }
+
+		std::string username() const { return m_Username; }
+
+		// sends this user a text message
+		void sendTextMessage(const std::string &msg);
+
+		// sends the user an updated friend list
+		void sendFriendList();
 	
+		void addFriend(const std::string &userName);
+		void setFriendList(const std::list<std::string> &lst) { m_FriendList=lst; }
 		std::list<std::string> friends() const { return m_FriendList; }
 	
 	private:
-		std::string m_DisplayName;
+		Protocol *m_ComProtocol;
+
+		std::string m_Username;
 		std::string m_Password;
 		
 		std::list<std::string> m_FriendList;

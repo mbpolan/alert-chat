@@ -38,7 +38,7 @@ class ServerSocket {
 		ServerSocket();
 		
 		void close();
-		void bind(char *port) throw(Exception&);
+		void bind(const std::string &ip, int port) throw(Exception&);
 		void listen() throw(Exception&);
 		int accept(std::string &clientIp);
 		

@@ -23,10 +23,26 @@
 #define USERMANAGER_H
 
 #include <iostream>
+#include <map>
+
+#include "user.h"
+#include "thread.h"
 
 class UserManager {
 	public:
 		UserManager();
+		~UserManager();
+
+		static UserManager* defaultManager();
+
+		void addUser(User *user);
+		void removeUser(User *user);
+
+		void deliverTextMessageTo(const std::string &who, const std::string &message);
+
+	private:
+		// maps user names to user objects
+		std::map<std::string, User*> m_Users;
 };
 
 #endif

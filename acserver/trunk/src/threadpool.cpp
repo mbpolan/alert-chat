@@ -21,12 +21,18 @@
 
 #include "threadpool.h"
 
-ThreadPool::ThreadPool(int maxThreads): m_MaxThreads(maxThreads) {
+using namespace Threads;
+
+ThreadPool::ThreadPool() {
 	m_LastError=0;
+
+	for (int i=0; i<TOTAL_MUTEXES; i++)
+		createMutex(&g_Mutexes[i]);
 }
 
 ThreadPool::~ThreadPool() {
-	
+	for (int i=0; i<TOTAL_MUTEXES; i++)
+		destroyMutex(&g_Mutexes[i]);
 }
 
 ThreadPool::Error ThreadPool::createThread(ThreadFunc routine, void *param) {
@@ -39,11 +45,4 @@ ThreadPool::Error ThreadPool::createThread(ThreadFunc routine, void *param) {
 	
 	else
 		return ThreadError;
-	
-}
-
-void ThreadPool::drain() {
-	// FIXME: find a better way to join already dead threads
-	for (int i=0; i<m_Threads.size(); i++)
-		joinThread(m_Threads[i]);
 }

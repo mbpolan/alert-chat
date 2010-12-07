@@ -21,7 +21,24 @@
 
 #include "user.h"
 
-User::User(const std::string &displayName, const std::string &password) {
-	m_DisplayName=displayName;
+User::User(const std::string &username, const std::string &password) {
+	m_Username=username;
 	m_Password=password;
+
+	m_ComProtocol=NULL;
+}
+
+void User::sendTextMessage(const std::string &msg) {
+	if (m_ComProtocol)
+		m_ComProtocol->sendTextMessage(msg);
+}
+
+// sends the user an updated friend list
+void User::sendFriendList() {
+	if (m_ComProtocol)
+		m_ComProtocol->sendFriendList(m_FriendList);
+}
+
+void User::addFriend(const std::string &userName) {
+	m_FriendList.push_back(userName);
 }

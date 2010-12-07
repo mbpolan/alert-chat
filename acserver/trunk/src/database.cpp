@@ -21,3 +21,36 @@
 
 #include "database.h"
 
+Database::QueryResult::QueryResult(int r, int c, const RowTable &rowData,
+					     const std::vector<std::string> &columnNames) {
+	m_NumRows=r;
+	m_NumCols=c;
+	m_ColumnNames=columnNames;
+	m_RowData=rowData;
+	m_ErrorMessage="";
+}
+
+Database::QueryResult::QueryResult(const std::string &error) {
+	m_ErrorMessage=error;
+}
+
+std::string Database::QueryResult::columnName(int index) const {
+	return m_ColumnNames[index];
+}
+
+std::vector<std::string> Database::QueryResult::rowAt(int index) const {
+	return m_RowData[index];
+}
+
+/***********************************************************************/
+
+Database::Database() {
+	m_LastError="";
+}
+
+std::string Database::lastError() {
+	std::string err=m_LastError;
+	m_LastError="";
+
+	return m_LastError;
+}

@@ -17,33 +17,34 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-// protocol.h: definition of Protocol class
+// variable.h: definitions of the Variable class
 
-#ifndef PROTOCOL_H
-#define PROTOCOL_H
+#ifndef VARIABLE_H
+#define VARIABLE_H
 
-#include <list>
+#include <cctype>
+#include <iostream>
 
-#include "definitions.h"
-#include "packet.h"
-
-class Protocol {
+class Variable {
 	public:
-		Protocol(Socket fd);
-		
-		bool authenticate(std::string &username, std::string &password);
-		void relay();
-	
+		enum Type { Null=0, Integer, String };
+
+		Variable();
+		Variable(int n);
+		Variable(const std::string &str);
+
+		bool isNull() { return m_DataType==Null; }
+
+		Type dataType() const { return m_DataType; }
+
+		int toInt() const;
+		std::string toString() const;
+
 	private:
-		void handlePacket(Packet &p);
-		void clientSentTextMessage(Packet &p);
+		int m_IntValue;
+		std::string m_StringValue;
 
-		void sendTextMessage(const std::string &msg);
-		void sendFriendList(const std::list<std::string> &lst);
-
-		Socket m_Socket;
-
-		friend class User;
+		Type m_DataType;
 };
 
 #endif
