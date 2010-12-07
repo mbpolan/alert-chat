@@ -17,33 +17,34 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-// protocol.h: definition of Protocol class
+// configmanager.h: definitions of the ConfigManager class
 
-#ifndef PROTOCOL_H
-#define PROTOCOL_H
+#ifndef CONFIGMANAGER_H
+#define CONFIGMANAGER_H
 
-#include <list>
+#include <iostream>
+#include <map>
 
 #include "definitions.h"
-#include "packet.h"
+#include "variable.h"
 
-class Protocol {
+typedef std::map<std::string, Variable> VariableMap;
+
+class ConfigManager {
 	public:
-		Protocol(Socket fd);
-		
-		bool authenticate(std::string &username, std::string &password);
-		void relay();
-	
+		ConfigManager(const std::string &file);
+		~ConfigManager();
+
+		static ConfigManager* manager();
+		static void setDefaultManager(ConfigManager *cm);
+
+		bool parse();
+
+		Variable valueForKey(const std::string &key);
+
 	private:
-		void handlePacket(Packet &p);
-		void clientSentTextMessage(Packet &p);
-
-		void sendTextMessage(const std::string &msg);
-		void sendFriendList(const std::list<std::string> &lst);
-
-		Socket m_Socket;
-
-		friend class User;
+		std::string m_File;
+		VariableMap m_Keys;
 };
 
 #endif

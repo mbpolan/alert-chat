@@ -19,14 +19,24 @@
  ***************************************************************************/
 // dbsqlite3.cpp: implementation of the DatabaseSQLite3 class
 
+#include <sstream>
+
 #include "dbsqlite3.h"
 
-DatabaseSQLite3::DatabaseSQLite3() {
+DatabaseSQLite3::DatabaseSQLite3(const std::string &file) {
+	m_File=file;
 	m_Handle=NULL;
 }
 
-bool DatabaseSQLite3::open(const std::string &file) {
-	if (sqlite3_open_v2(file.c_str(), &m_Handle, SQLITE_OPEN_READONLY, NULL)!=SQLITE_OK) {
+DatabaseSQLite3::~DatabaseSQLite3() {
+	if (!m_Handle) {
+		sqlite3_close(m_Handle);
+		m_Handle=NULL;
+	}
+}
+
+bool DatabaseSQLite3::open() {
+	if (sqlite3_open_v2(m_File.c_str(), &m_Handle, SQLITE_OPEN_READONLY, NULL)!=SQLITE_OK) {
 		sqlite3_close(m_Handle);
 		return false;
 	}
@@ -38,9 +48,84 @@ bool DatabaseSQLite3::close() {
 	return (sqlite3_close(m_Handle)==SQLITE_OK);
 }
 
-QueryResult* DatabaseSQLite3::query(const std::string &sql) {
-	QueryResult *res=new QueryResult;
+Database::QueryResult* DatabaseSQLite3::query(const std::string &sql) {
+	char **table;
+	char *error;
+	int r, c;
 	
-	sqlite3_get_table(m_Handle, sql.c_str(), &res->table, &res->rows, &res->cols, &res->error);
-	return res;
+	if (sqlite3_get_table(m_Handle, sql.c_str(), &table, &r, &c, &error)!=SQLITE_OK) {
+		std::string strerr=std::string(error);
+		free(error);
+
+		return new Database::QueryResult(strerr);
+	}
+
+	std::vector<std::string> colNames;
+	Database::QueryResult::RowTable rowData;
+
+	// collect the column names
+	for (int i=0; i<c; i++)
+		colNames.push_back(table[i]);
+
+	// get the row data; sqlite table result has (r+1)*c elements
+	for (int i=c; i<(r+1)*c; i+=c) {
+		std::vector<std::string> row;
+
+		for (int j=0; j<c; j++)
+			row.push_back(table[i+j]);
+
+		rowData.push_back(row);
+	}
+
+	sqlite3_free_table(table);
+
+	return new Database::QueryResult(r, c, rowData, colNames);
+}
+
+std::list<std::string> DatabaseSQLite3::getFriendList(const std::string &username) {
+	std::list<std::string> friends;
+
+	std::stringstream ss;
+	ss << "SELECT * FROM users WHERE username=\'" << username << "\'";
+
+	// first get the user's id
+	QueryResult *res=query(ss.str());
+	if (res->error()) {
+		std::cerr << "DatabaseSQLite3: Error while resolving user id for friendlist for user " << username
+				  << ": " << res->errorMessage() << std::endl;
+		return friends;
+	}
+
+	// now get all the friend list entries for this user
+	// we got a row from the users table: <id>,<username>,<password>, the key is index 0
+	ss.str("");
+	ss << "SELECT * FROM friendlists WHERE user=" << res->rowAt(0)[0];
+
+	delete res;
+	res=query(ss.str());
+	if (res->error()) {
+		std::cerr << "DatabaseSQLite3: Error while getting friendlist for user " << username << ": " << res->errorMessage() << std::endl;
+		return friends;
+	}
+
+	ss.str("");
+
+	for (int i=0; i<res->rowCount(); i++) {
+		// fetching from the friendslist table: <id>,<user>,<friend>
+		// index is at 2
+		ss << "SELECT * FROM users WHERE id=" << res->rowAt(i)[2];
+
+		// resolve this username by cross-referencing it with the users table
+		QueryResult *resolve=query(ss.str());
+		if (!resolve->error()) {
+			friends.push_back(resolve->rowAt(0)[1]);
+			delete resolve;
+		}
+
+		ss.str("");
+	}
+
+	delete res;
+
+	return friends;
 }

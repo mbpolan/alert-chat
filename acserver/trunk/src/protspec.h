@@ -26,10 +26,16 @@
 #define PROT_LOGIN		0x01
 #define PROT_LOGOUT		0x02
 
-// client messages
+// server messages
 #define PROT_CLIENTMSG	0x10
 
 // authentication
 #define PROT_REQAUTH	0x20
+
+// friend lists and status updates
+#define PROT_FRIENDLIST	0x25
+
+// peer to peer communication
+#define PROT_TEXTMESSAGE	0x40
 
 #endif

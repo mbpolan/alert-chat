@@ -22,10 +22,53 @@
 #ifndef DATABASE_H
 #define DATABASE_H
 
+#include <iostream>
+#include <list>
+#include <vector>
+
 class Database {
 	public:
-		Database() { };
+		class QueryResult {
+			public:
+				typedef std::vector<std::vector<std::string> > RowTable;
+
+			public:
+				QueryResult(int r, int c, const RowTable &rowData,
+						const std::vector<std::string> &columnNames);
+
+				// constructs a null result query with an error message
+				QueryResult(const std::string &errorMessage);
+
+				std::string errorMessage() const { return m_ErrorMessage; }
+				bool error() const { return !m_ErrorMessage.empty(); }
+
+				int rowCount() { return m_NumRows; }
+				int columnCount() { return m_NumCols; }
+
+				std::string columnName(int index) const;
+				std::vector<std::string> rowAt(int index) const;
+
+			private:
+				std::vector<std::string> m_ColumnNames;
+				RowTable m_RowData;
+				std::string m_ErrorMessage;
+
+				int m_NumRows;
+				int m_NumCols;
+		};
+
+	public:
+		Database();
 		
+		std::string lastError();
+
+		virtual bool open()=0;
+		virtual bool close()=0;
+
+		virtual std::list<std::string> getFriendList(const std::string &username)=0;
+
+	protected:
+		std::string m_LastError;
 };
 
 #endif

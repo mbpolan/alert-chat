@@ -21,3 +21,46 @@
 
 #include "usermanager.h"
 
+static UserManager *g_UserManager=NULL;
+
+using namespace Threads;
+
+UserManager::UserManager() {
+	g_UserManager=this;
+}
+
+UserManager* UserManager::defaultManager() {
+	return g_UserManager;
+}
+
+void UserManager::addUser(User *user) {
+	lock(&g_Mutexes[MUTEX_USERMANAGER]);
+
+	m_Users[user->username()]=user;
+
+	unlock(&g_Mutexes[MUTEX_USERMANAGER]);
+}
+
+void UserManager::removeUser(User *user) {
+	lock(&g_Mutexes[MUTEX_USERMANAGER]);
+
+	for (std::map<std::string,User*>::iterator it=m_Users.begin(); it!=m_Users.end(); ++it) {
+		if ((*it).second==user) {
+			delete (*it).second;
+			m_Users.erase(it);
+
+			break;
+		}
+	}
+
+	unlock(&g_Mutexes[MUTEX_USERMANAGER]);
+}
+
+void UserManager::deliverTextMessageTo(const std::string &who, const std::string &message) {
+	lock(&g_Mutexes[MUTEX_USERMANAGER]);
+
+	if (m_Users.find(who)!=m_Users.end())
+		m_Users[who]->sendTextMessage(message);
+
+	unlock(&g_Mutexes[MUTEX_USERMANAGER]);
+}

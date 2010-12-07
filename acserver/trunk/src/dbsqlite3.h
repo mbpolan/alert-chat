@@ -25,37 +25,24 @@
 #include <cstdlib>
 #include <iostream>
 #include <sqlite3.h>
+#include <list>
 
 #include "database.h"
 
-class QueryResult {
-	public:
-		QueryResult() {
-			table=NULL;
-			error=NULL;
-		}
-		
-		~QueryResult() {
-			sqlite3_free_table(table);
-			if (error) free(error);
-		}
-		
-		char **table;
-		char *error;
-		int rows;
-		int cols;
-};
-
 class DatabaseSQLite3: public Database {
 	public:
-		DatabaseSQLite3();
+		DatabaseSQLite3(const std::string &file);
+		~DatabaseSQLite3();
 		
-		bool open(const std::string &file);
+		bool open();
 		bool close();
 		
-		QueryResult* query(const std::string &sql);
+		Database::QueryResult* query(const std::string &sql);
+
+		std::list<std::string> getFriendList(const std::string &username);
 	
 	private:
+		std::string m_File;
 		sqlite3 *m_Handle;
 };
 

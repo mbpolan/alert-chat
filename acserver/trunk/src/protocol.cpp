@@ -20,6 +20,7 @@
 // protocol.cpp: implementation of Protocol class
 
 #include "dbsqlite3.h"
+#include "usermanager.h"
 #include "packet.h"
 #include "protocol.h"
 #include "protspec.h"
@@ -28,7 +29,7 @@ Protocol::Protocol(Socket fd) {
 	m_Socket=fd;
 }
 
-bool Protocol::authenticate() {
+bool Protocol::authenticate(std::string &username, std::string &password) {
 	Packet a, p;
 	
 	// send the authentication requirement packet
@@ -38,16 +39,15 @@ bool Protocol::authenticate() {
 	
 	// check for the login packet
 	if (p.read(m_Socket)) {
-		
 		// we're expecting the login packet ONLY
 		uint8_t header=p.byte();
 		if (header==(char) PROT_LOGIN) {
-			std::string username=p.string();
-			std::string password=p.string();
+			username=p.string();
+			password=p.string();
 			
-			DatabaseSQLite3 db;
-			if (!db.open("data.db"))
-				std::cout << "WARNING: unable to open database!\n";
+			DatabaseSQLite3 db("data.db");
+			if (!db.open())
+				std::cerr << "Protocol: unable to open database: " << db.lastError() << std::endl;
 			
 			else {
 				std::string sql="SELECT * FROM users WHERE username='";
@@ -57,16 +57,17 @@ bool Protocol::authenticate() {
 				sql+="'";
 				
 				// query the database and see if the user's credentials were valid
-				QueryResult *res=db.query(sql);
-				if (!res) {
-					std::cout << "WARNING: query was NULL!\n";
+				Database::QueryResult *res=db.query(sql);
+				if (res->error()) {
+					std::cerr << "Protocol: unable to query database for user " << username << ": ";
+					std::cerr << db.lastError() << std::endl;
 					db.close();
 					
 					delete res;
 					return false;
 				}
 				
-				int rows=res->rows;
+				int rows=res->rowCount();
 
 				db.close();
 				delete res;
@@ -83,6 +84,49 @@ bool Protocol::authenticate() {
 void Protocol::relay() {
 	Packet p;
 	while(p.read(m_Socket)) {
-		
+		handlePacket(p);
 	}
+}
+
+void Protocol::handlePacket(Packet &p) {
+	char header=p.byte();
+	switch(header) {
+		case PROT_TEXTMESSAGE: clientSentTextMessage(p); break;
+
+		default: std::cerr << "Protocol: unknown client packet header: " << std::ios_base::hex << header << std::endl; break;
+	}
+}
+
+void Protocol::clientSentTextMessage(Packet &p) {
+	// recipient
+	std::string recipient=p.string();
+
+	// just contains a string
+	std::string message=p.string();
+
+	UserManager::defaultManager()->deliverTextMessageTo(recipient, message);
+}
+
+void Protocol::sendTextMessage(const std::string &msg) {
+	Packet p;
+
+	// simple enough: the packet just contains the message
+	p.addByte(PROT_TEXTMESSAGE);
+	p.addString(msg);
+
+	p.write(m_Socket);
+}
+
+void Protocol::sendFriendList(const std::list<std::string> &lst) {
+	Packet p;
+
+	// add the header and the length of the friend list
+	p.addByte(PROT_FRIENDLIST);
+	p.addUint16(lst.size());
+
+	// add each friend's username
+	for (std::list<std::string>::const_iterator it=lst.begin(); it!=lst.end(); ++it)
+		p.addString((*it));
+
+	p.write(m_Socket);
 }

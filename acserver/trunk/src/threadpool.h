@@ -31,17 +31,15 @@ class ThreadPool {
 	public:
 		enum Error { NoError=0, TooManyThreads=-1, ThreadError=-2 };
 		
-		ThreadPool(int maxThreads);
+		ThreadPool();
 		~ThreadPool();
 		
-		Error createThread(ThreadFunc routine, void *param);
-		void drain();
+		Error createThread(Threads::ThreadFunc routine, void *param);
 		
 		int lastError() const { return m_LastError; }
 	
 	private:
-		std::vector<thread_t> m_Threads;
-		int m_MaxThreads;
+		std::vector<Threads::thread_t> m_Threads;
 		
 		int m_LastError;
 };
