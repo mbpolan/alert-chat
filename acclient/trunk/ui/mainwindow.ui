@@ -16,7 +16,13 @@
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QTreeView" name="friendView"/>
+     <widget class="QTreeWidget" name="friendView">
+      <column>
+       <property name="text">
+        <string>Friends</string>
+       </property>
+      </column>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -26,7 +32,7 @@
      <x>0</x>
      <y>0</y>
      <width>236</width>
-     <height>22</height>
+     <height>27</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

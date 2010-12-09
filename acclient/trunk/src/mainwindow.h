@@ -47,12 +47,16 @@ class MainWindow: public QMainWindow {
 		void onNetDisconnected();
 		void onNetMessage(QString, bool);
 		void onNetUpdateFriendList(QList<QString>);
+		void onNetUpdateUserStatus(QString, int);
 
 		void onQuit();
 		void onAbout();
 
     private:
+		void resetTreeView();
+
 		NetworkManager *m_Network;
+		QString m_User;
 		
 		Ui::MainWindow *ui;
 };
