@@ -19,6 +19,7 @@
  ***************************************************************************/
 // packet.cpp: implementation of Packet class
 
+#include <cerrno>
 #include <sys/socket.h>
 
 #include "packet.h"
@@ -118,24 +119,37 @@ bool Packet::write(Socket fd) {
 	return (n!=-1);
 }
 
-bool Packet::read(Socket fd) {
+Packet::Result Packet::read(Socket fd) {
 	// read the size first
 	int n=recv(fd, m_Buffer, 2, 0);
-	if (n<=0) {
-		std::cout << "recieved 0\n";
-		return false;
-	}
+	if (n==-1 && errno==EWOULDBLOCK)
+		return TimedOut;
+	else if (n==0)
+		return Disconnected;
 	
 	int size=(m_Buffer[0] | (m_Buffer[1] >> 8));
 	int bytes=recv(fd, m_Buffer+2, size, 0);
 	
 	if (bytes!=size || bytes<=0) {
 		std::cout << "read " << bytes << " was expecting " << size << std::endl;
-		return false;
+		return DataCorrupt;
 	}
 	
 	m_Size=size;
 	m_Pos=2;
 	
-	return true;
+	return NoError;
+}
+
+void Packet::operator<<(Packet &p) {
+	if (p.size()+m_Size>PACKET_BUFFER_MAX)
+		return;
+
+	int bytes=0;
+	while(!p.empty()) {
+		addByte(p.byte());
+		bytes++;
+	}
+
+	p.rewind(bytes);
 }

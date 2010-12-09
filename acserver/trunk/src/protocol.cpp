@@ -38,7 +38,7 @@ bool Protocol::authenticate(std::string &username, std::string &password) {
 		return false;
 	
 	// check for the login packet
-	if (p.read(m_Socket)) {
+	if (p.read(m_Socket)!=Packet::Disconnected) {
 		// we're expecting the login packet ONLY
 		uint8_t header=p.byte();
 		if (header==(char) PROT_LOGIN) {
@@ -83,8 +83,14 @@ bool Protocol::authenticate(std::string &username, std::string &password) {
 
 void Protocol::relay() {
 	Packet p;
-	while(p.read(m_Socket)) {
-		handlePacket(p);
+	int rc;
+	while((rc=p.read(m_Socket))!=Packet::Disconnected) {
+		if (rc==Packet::NoError)
+			handlePacket(p);
+
+		sendQueuedPackets();
+
+		sleep(1);
 	}
 }
 
@@ -107,6 +113,16 @@ void Protocol::clientSentTextMessage(Packet &p) {
 	UserManager::defaultManager()->deliverTextMessageTo(recipient, message);
 }
 
+void Protocol::sendQueuedPackets() {
+	if (m_OutgoingPackets.empty())
+		return;
+
+	for (int i=0; i<m_OutgoingPackets.size(); i++)
+		m_OutgoingPackets[i].write(m_Socket);
+
+	m_OutgoingPackets.clear();
+}
+
 void Protocol::sendTextMessage(const std::string &msg) {
 	Packet p;
 
@@ -114,7 +130,7 @@ void Protocol::sendTextMessage(const std::string &msg) {
 	p.addByte(PROT_TEXTMESSAGE);
 	p.addString(msg);
 
-	p.write(m_Socket);
+	m_OutgoingPackets.push_back(p);
 }
 
 void Protocol::sendFriendList(const std::list<std::string> &lst) {
@@ -128,5 +144,15 @@ void Protocol::sendFriendList(const std::list<std::string> &lst) {
 	for (std::list<std::string>::const_iterator it=lst.begin(); it!=lst.end(); ++it)
 		p.addString((*it));
 
-	p.write(m_Socket);
+	m_OutgoingPackets.push_back(p);
+}
+
+void Protocol::sendUserStatusUpdate(const std::string &user, bool online) {
+	Packet p;
+
+	p.addByte(PROT_STATUSUPDATE);
+	p.addString(user);
+	p.addUint16(online);
+
+	m_OutgoingPackets.push_back(p);
 }

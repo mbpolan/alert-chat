@@ -34,33 +34,50 @@ UserManager* UserManager::defaultManager() {
 }
 
 void UserManager::addUser(User *user) {
-	lock(&g_Mutexes[MUTEX_USERMANAGER]);
+	broadcastUserStatus(user, LoggedIn);
+
+	// send an initial friend list status update as well
+	std::list<std::string> friends=user->friends();
+	for (std::list<std::string>::iterator it=friends.begin(); it!=friends.end(); ++it) {
+		std::string friendName=(*it);
+		if (m_Users.find(friendName)!=m_Users.end())
+			user->sendUserStatusUpdate(friendName, LoggedIn);
+	}
 
 	m_Users[user->username()]=user;
-
-	unlock(&g_Mutexes[MUTEX_USERMANAGER]);
 }
 
 void UserManager::removeUser(User *user) {
-	lock(&g_Mutexes[MUTEX_USERMANAGER]);
-
 	for (std::map<std::string,User*>::iterator it=m_Users.begin(); it!=m_Users.end(); ++it) {
 		if ((*it).second==user) {
-			delete (*it).second;
 			m_Users.erase(it);
-
 			break;
 		}
 	}
 
-	unlock(&g_Mutexes[MUTEX_USERMANAGER]);
+	broadcastUserStatus(user, LoggedOut);
+
+	delete user;
 }
 
 void UserManager::deliverTextMessageTo(const std::string &who, const std::string &message) {
-	lock(&g_Mutexes[MUTEX_USERMANAGER]);
-
 	if (m_Users.find(who)!=m_Users.end())
 		m_Users[who]->sendTextMessage(message);
+}
 
-	unlock(&g_Mutexes[MUTEX_USERMANAGER]);
+void UserManager::broadcastUserStatus(User *user, UserStatus status) {
+	// alert all other clients who have this user added as a friend
+	for (std::map<std::string,User*>::iterator it=m_Users.begin(); it!=m_Users.end(); ++it) {
+		User *client=(*it).second;
+		std::list<std::string> friends=client->friends();
+
+		// TODO: pick a better data structure than list :/ an O(1) search time would be nice; maybe a hash table?
+		for (std::list<std::string>::const_iterator friendIt=friends.begin(); friendIt!=friends.end(); ++friendIt) {
+			std::string fname=(*friendIt);
+			if (fname==user->username()) {
+				client->sendUserStatusUpdate(user->username(), status);
+				break;
+			}
+		}
+	}
 }
