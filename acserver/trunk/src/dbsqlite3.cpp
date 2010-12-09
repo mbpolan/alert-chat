@@ -60,7 +60,7 @@ Database::QueryResult* DatabaseSQLite3::query(const std::string &sql) {
 		return new Database::QueryResult(strerr);
 	}
 
-	std::vector<std::string> colNames;
+	StringVector colNames;
 	Database::QueryResult::RowTable rowData;
 
 	// collect the column names
@@ -69,7 +69,7 @@ Database::QueryResult* DatabaseSQLite3::query(const std::string &sql) {
 
 	// get the row data; sqlite table result has (r+1)*c elements
 	for (int i=c; i<(r+1)*c; i+=c) {
-		std::vector<std::string> row;
+		StringVector row;
 
 		for (int j=0; j<c; j++)
 			row.push_back(table[i+j]);
@@ -82,8 +82,8 @@ Database::QueryResult* DatabaseSQLite3::query(const std::string &sql) {
 	return new Database::QueryResult(r, c, rowData, colNames);
 }
 
-std::list<std::string> DatabaseSQLite3::getFriendList(const std::string &username) {
-	std::list<std::string> friends;
+StringList DatabaseSQLite3::getFriendList(const std::string &username) {
+	StringList friends;
 
 	std::stringstream ss;
 	ss << "SELECT * FROM users WHERE username=\'" << username << "\'";

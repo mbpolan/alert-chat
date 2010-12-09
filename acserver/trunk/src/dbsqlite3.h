@@ -39,7 +39,7 @@ class DatabaseSQLite3: public Database {
 		
 		Database::QueryResult* query(const std::string &sql);
 
-		std::list<std::string> getFriendList(const std::string &username);
+		StringList getFriendList(const std::string &username);
 	
 	private:
 		std::string m_File;

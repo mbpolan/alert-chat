@@ -29,9 +29,13 @@
 
 class User {
 	public:
+		enum Status { Offline=0, Online };
+
 		User(const std::string &username, const std::string &password);
 
 		void setProtocol(Protocol *p) { m_ComProtocol=p; }
+
+		void kick();
 
 		std::string username() const { return m_Username; }
 
@@ -45,8 +49,8 @@ class User {
 		void sendUserStatusUpdate(const std::string &user, bool online);
 	
 		void addFriend(const std::string &userName);
-		void setFriendList(const std::list<std::string> &lst) { m_FriendList=lst; }
-		std::list<std::string> friends() const { return m_FriendList; }
+		void setFriendList(const StringList &lst) { m_FriendList=lst; }
+		StringList friends() const { return m_FriendList; }
 	
 	private:
 		Protocol *m_ComProtocol;
@@ -54,7 +58,7 @@ class User {
 		std::string m_Username;
 		std::string m_Password;
 		
-		std::list<std::string> m_FriendList;
+		StringList m_FriendList;
 };
 
 #endif

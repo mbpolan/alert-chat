@@ -34,20 +34,8 @@ typedef pthread_mutex_t mutex_t;
 #define createMutex(x) pthread_mutex_init(x, NULL)
 #define destroyMutex(x) pthread_mutex_destroy(x)
 
-//#define lock(x) pthread_mutex_lock(x)
-//#define unlock(x) pthread_mutex_unlock(x)
-static int count=0;
-static void lock(mutex_t *m) {
-	count++;
-	std::cout << "Locked: " << count << std::endl;
-	//pthread_mutex_lock(m);
-}
-
-static void unlock(mutex_t *m) {
-	//pthread_mutex_unlock(m);
-	count--;
-	std::cout << "Locked: " << count << std::endl;
-}
+#define lock(x) pthread_mutex_lock(x)
+#define unlock(x) pthread_mutex_unlock(x)
 
 #define exitThread() pthread_exit(NULL)
 

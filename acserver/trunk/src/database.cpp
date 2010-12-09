@@ -22,7 +22,7 @@
 #include "database.h"
 
 Database::QueryResult::QueryResult(int r, int c, const RowTable &rowData,
-					     const std::vector<std::string> &columnNames) {
+					     const StringVector &columnNames) {
 	m_NumRows=r;
 	m_NumCols=c;
 	m_ColumnNames=columnNames;
@@ -38,7 +38,7 @@ std::string Database::QueryResult::columnName(int index) const {
 	return m_ColumnNames[index];
 }
 
-std::vector<std::string> Database::QueryResult::rowAt(int index) const {
+StringVector Database::QueryResult::rowAt(int index) const {
 	return m_RowData[index];
 }
 

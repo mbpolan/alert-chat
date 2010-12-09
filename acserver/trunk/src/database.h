@@ -23,18 +23,19 @@
 #define DATABASE_H
 
 #include <iostream>
-#include <list>
 #include <vector>
+
+#include "definitions.h"
 
 class Database {
 	public:
 		class QueryResult {
 			public:
-				typedef std::vector<std::vector<std::string> > RowTable;
+				typedef std::vector<StringVector > RowTable;
 
 			public:
 				QueryResult(int r, int c, const RowTable &rowData,
-						const std::vector<std::string> &columnNames);
+						const StringVector &columnNames);
 
 				// constructs a null result query with an error message
 				QueryResult(const std::string &errorMessage);
@@ -46,10 +47,10 @@ class Database {
 				int columnCount() { return m_NumCols; }
 
 				std::string columnName(int index) const;
-				std::vector<std::string> rowAt(int index) const;
+				StringVector rowAt(int index) const;
 
 			private:
-				std::vector<std::string> m_ColumnNames;
+				StringVector m_ColumnNames;
 				RowTable m_RowData;
 				std::string m_ErrorMessage;
 
@@ -65,7 +66,7 @@ class Database {
 		virtual bool open()=0;
 		virtual bool close()=0;
 
-		virtual std::list<std::string> getFriendList(const std::string &username)=0;
+		virtual StringList getFriendList(const std::string &username)=0;
 
 	protected:
 		std::string m_LastError;
