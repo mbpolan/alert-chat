@@ -22,11 +22,19 @@
 #ifndef DEFINITIONS_H
 #define DEFINITIONS_H
 
+#include <iostream>
+#include <list>
+#include <vector>
+
+// type definitions for cleaner code
+typedef std::list<std::string> StringList;
+typedef std::vector<std::string> StringVector;
+
 // define the server version
 #define VERSION		"0.1a"
 
 // how many connections our server supports
-#define MAX_CONNECTIONS		5
+#define MAX_CONNECTIONS		500
 
 #ifdef __LINUX__
 

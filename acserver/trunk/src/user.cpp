@@ -28,21 +28,22 @@ User::User(const std::string &username, const std::string &password) {
 	m_ComProtocol=NULL;
 }
 
+void User::kick() {
+	m_ComProtocol->disconnect();
+}
+
 void User::sendTextMessage(const std::string &msg) {
-	if (m_ComProtocol)
-		m_ComProtocol->sendTextMessage(msg);
+	m_ComProtocol->sendTextMessage(msg);
 }
 
 // sends the user an updated friend list
 void User::sendFriendList() {
-	if (m_ComProtocol)
-		m_ComProtocol->sendFriendList(m_FriendList);
+	m_ComProtocol->sendFriendList(m_FriendList);
 }
 
 // sends a friend's online status update
 void User::sendUserStatusUpdate(const std::string &user, bool online) {
-	if (m_ComProtocol)
-		m_ComProtocol->sendUserStatusUpdate(user, online);
+	m_ComProtocol->sendUserStatusUpdate(user, online);
 }
 
 void User::addFriend(const std::string &userName) {

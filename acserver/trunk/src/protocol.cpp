@@ -84,14 +84,17 @@ bool Protocol::authenticate(std::string &username, std::string &password) {
 void Protocol::relay() {
 	Packet p;
 	int rc;
-	while((rc=p.read(m_Socket))!=Packet::Disconnected) {
+	while(m_Socket>=0 && (rc=p.read(m_Socket))!=Packet::Disconnected) {
 		if (rc==Packet::NoError)
 			handlePacket(p);
 
 		sendQueuedPackets();
-
-		sleep(1);
 	}
+}
+
+void Protocol::disconnect() {
+	if (m_Socket>=0)
+		closeSocket(m_Socket);
 }
 
 void Protocol::handlePacket(Packet &p) {
@@ -133,7 +136,7 @@ void Protocol::sendTextMessage(const std::string &msg) {
 	m_OutgoingPackets.push_back(p);
 }
 
-void Protocol::sendFriendList(const std::list<std::string> &lst) {
+void Protocol::sendFriendList(const StringList &lst) {
 	Packet p;
 
 	// add the header and the length of the friend list
@@ -141,18 +144,18 @@ void Protocol::sendFriendList(const std::list<std::string> &lst) {
 	p.addUint16(lst.size());
 
 	// add each friend's username
-	for (std::list<std::string>::const_iterator it=lst.begin(); it!=lst.end(); ++it)
+	for (StringList::const_iterator it=lst.begin(); it!=lst.end(); ++it)
 		p.addString((*it));
 
 	m_OutgoingPackets.push_back(p);
 }
 
-void Protocol::sendUserStatusUpdate(const std::string &user, bool online) {
+void Protocol::sendUserStatusUpdate(const std::string &user, int status) {
 	Packet p;
 
 	p.addByte(PROT_STATUSUPDATE);
 	p.addString(user);
-	p.addUint16(online);
+	p.addUint16(status);
 
 	m_OutgoingPackets.push_back(p);
 }

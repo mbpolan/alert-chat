@@ -38,6 +38,7 @@ class Protocol {
 		
 		bool authenticate(std::string &username, std::string &password);
 		void relay();
+		void disconnect();
 	
 	private:
 		void handlePacket(Packet &p);
@@ -45,8 +46,8 @@ class Protocol {
 
 		void sendQueuedPackets();
 		void sendTextMessage(const std::string &msg);
-		void sendFriendList(const std::list<std::string> &lst);
-		void sendUserStatusUpdate(const std::string &user, bool online);
+		void sendFriendList(const StringList &lst);
+		void sendUserStatusUpdate(const std::string &user, int status);
 
 		Socket m_Socket;
 		std::vector<Packet> m_OutgoingPackets;

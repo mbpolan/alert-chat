@@ -34,20 +34,26 @@ UserManager* UserManager::defaultManager() {
 }
 
 void UserManager::addUser(User *user) {
-	broadcastUserStatus(user, LoggedIn);
+	lock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
+
+	broadcastUserStatus(user, User::Online);
 
 	// send an initial friend list status update as well
-	std::list<std::string> friends=user->friends();
-	for (std::list<std::string>::iterator it=friends.begin(); it!=friends.end(); ++it) {
+	StringList friends=user->friends();
+	for (StringList::iterator it=friends.begin(); it!=friends.end(); ++it) {
 		std::string friendName=(*it);
 		if (m_Users.find(friendName)!=m_Users.end())
-			user->sendUserStatusUpdate(friendName, LoggedIn);
+			user->sendUserStatusUpdate(friendName, User::Online);
 	}
 
 	m_Users[user->username()]=user;
+	
+	unlock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
 }
 
 void UserManager::removeUser(User *user) {
+	lock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
+
 	for (std::map<std::string,User*>::iterator it=m_Users.begin(); it!=m_Users.end(); ++it) {
 		if ((*it).second==user) {
 			m_Users.erase(it);
@@ -55,9 +61,18 @@ void UserManager::removeUser(User *user) {
 		}
 	}
 
-	broadcastUserStatus(user, LoggedOut);
+	broadcastUserStatus(user, User::Offline);
 
-	delete user;
+	unlock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
+}
+
+void UserManager::kickAll() {
+	lock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
+
+	for (std::map<std::string, User*>::iterator it=m_Users.begin(); it!=m_Users.end(); ++it)
+			(*it).second->kick();
+
+	unlock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
 }
 
 void UserManager::deliverTextMessageTo(const std::string &who, const std::string &message) {
@@ -65,14 +80,14 @@ void UserManager::deliverTextMessageTo(const std::string &who, const std::string
 		m_Users[who]->sendTextMessage(message);
 }
 
-void UserManager::broadcastUserStatus(User *user, UserStatus status) {
+void UserManager::broadcastUserStatus(User *user, User::Status status) {
 	// alert all other clients who have this user added as a friend
 	for (std::map<std::string,User*>::iterator it=m_Users.begin(); it!=m_Users.end(); ++it) {
 		User *client=(*it).second;
-		std::list<std::string> friends=client->friends();
+		StringList friends=client->friends();
 
 		// TODO: pick a better data structure than list :/ an O(1) search time would be nice; maybe a hash table?
-		for (std::list<std::string>::const_iterator friendIt=friends.begin(); friendIt!=friends.end(); ++friendIt) {
+		for (StringList::const_iterator friendIt=friends.begin(); friendIt!=friends.end(); ++friendIt) {
 			std::string fname=(*friendIt);
 			if (fname==user->username()) {
 				client->sendUserStatusUpdate(user->username(), status);

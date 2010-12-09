@@ -63,7 +63,7 @@ void* connectionHandler(void *param) {
 		// get this user's friend list
 		DatabaseSQLite3 db("data.db");
 		if (db.open()) {
-			std::list<std::string> friends=db.getFriendList(username);
+			StringList friends=db.getFriendList(username);
 			db.close();
 
 			user->setFriendList(friends);
@@ -90,6 +90,8 @@ void* connectionHandler(void *param) {
 		p.relay();
 
 		UserManager::defaultManager()->removeUser(user);
+
+		delete user;
 	}
 	
 	// close the socket if still necessary
@@ -151,7 +153,7 @@ int main(int argc, char *argv[]) {
 		
 		// see if this socket is valid
 		Socket fd=sock.accept(ip);
-		if (fd>0) {
+		if (fd>=0) {
 			if (pool.createThread(connectionHandler, &fd)!=ThreadPool::NoError)
 				std::cout << "Rejecting connection from " << ip << " (" << pool.lastError() << ")\n";
 			else
@@ -162,6 +164,9 @@ int main(int argc, char *argv[]) {
 	
 	std::cout << "Alert Chat server shutting down...\n";
 	
+	// disconnect all users
+	g_UserManager->kickAll();
+
 	// close the socket and join all active threads
 	sock.close();
 	

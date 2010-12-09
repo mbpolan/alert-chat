@@ -83,7 +83,6 @@ void ServerSocket::bind(const std::string &ip, int port) throw (Exception&) {
 void ServerSocket::listen() throw(Exception&) {
 	if (::listen(m_Socket, 10)<0)
 		throw Exception("Unable to listen on socket");
-	
 }
 
 int ServerSocket::accept(std::string &clientIp) {
