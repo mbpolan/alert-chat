@@ -39,6 +39,12 @@ void User::sendFriendList() {
 		m_ComProtocol->sendFriendList(m_FriendList);
 }
 
+// sends a friend's online status update
+void User::sendUserStatusUpdate(const std::string &user, bool online) {
+	if (m_ComProtocol)
+		m_ComProtocol->sendUserStatusUpdate(user, online);
+}
+
 void User::addFriend(const std::string &userName) {
 	m_FriendList.push_back(userName);
 }

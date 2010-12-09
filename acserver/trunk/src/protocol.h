@@ -23,13 +23,18 @@
 #define PROTOCOL_H
 
 #include <list>
+#include <vector>
 
 #include "definitions.h"
 #include "packet.h"
 
+class User;
+
 class Protocol {
 	public:
 		Protocol(Socket fd);
+
+		void setUser(User *user) { m_User=user; }
 		
 		bool authenticate(std::string &username, std::string &password);
 		void relay();
@@ -38,10 +43,15 @@ class Protocol {
 		void handlePacket(Packet &p);
 		void clientSentTextMessage(Packet &p);
 
+		void sendQueuedPackets();
 		void sendTextMessage(const std::string &msg);
 		void sendFriendList(const std::list<std::string> &lst);
+		void sendUserStatusUpdate(const std::string &user, bool online);
 
 		Socket m_Socket;
+		std::vector<Packet> m_OutgoingPackets;
+
+		User *m_User;
 
 		friend class User;
 };

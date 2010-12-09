@@ -22,6 +22,8 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <sys/socket.h>
+#include <sys/time.h>
 
 #include "configmanager.h"
 #include "definitions.h"
@@ -38,7 +40,7 @@ UserManager *g_UserManager;
 
 // thread routine for handling a new connection from a user
 void* connectionHandler(void *param) {
-	Socket fd=(Socket) param;
+	Socket fd=*(Socket*) param;
 	Protocol p(fd);
 	
 	// attempt to authenticate the user first
@@ -56,18 +58,33 @@ void* connectionHandler(void *param) {
 		// allocate a user object for this user
 		User *user=new User(username, password);
 		user->setProtocol(&p);
-		UserManager::defaultManager()->addUser(user);
+		p.setUser(user);
 
 		// get this user's friend list
 		DatabaseSQLite3 db("data.db");
 		if (db.open()) {
 			std::list<std::string> friends=db.getFriendList(username);
+			db.close();
+
 			user->setFriendList(friends);
 
 			user->sendFriendList();
-
-			db.close();
 		}
+
+		// have the receive call timeout after a given time
+		struct timeval tv;
+		int rto=g_ConfigManager->valueForKey("internal_recvtimeout").toInt();
+		tv.tv_sec=rto/1000;
+		tv.tv_usec=(rto%1000)*1000;
+
+		if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (char*) &tv, sizeof(tv))==-1) {
+			std::cout << "Unable to call setsockopt for client " << fd << std::endl;
+			close(fd);
+
+			pthread_exit(NULL);
+		}
+
+		UserManager::defaultManager()->addUser(user);
 
 		// begin communications relay
 		p.relay();
@@ -135,7 +152,7 @@ int main(int argc, char *argv[]) {
 		// see if this socket is valid
 		Socket fd=sock.accept(ip);
 		if (fd>0) {
-			if (pool.createThread(connectionHandler, (void*) fd)!=ThreadPool::NoError)
+			if (pool.createThread(connectionHandler, &fd)!=ThreadPool::NoError)
 				std::cout << "Rejecting connection from " << ip << " (" << pool.lastError() << ")\n";
 			else
 				std::cout << "Accepted connection from " << ip << std::endl;

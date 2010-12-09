@@ -30,6 +30,8 @@
 
 class UserManager {
 	public:
+		enum UserStatus { LoggedOut=0, LoggedIn=1 };
+
 		UserManager();
 		~UserManager();
 
@@ -41,6 +43,8 @@ class UserManager {
 		void deliverTextMessageTo(const std::string &who, const std::string &message);
 
 	private:
+		void broadcastUserStatus(User *user, UserStatus status);
+
 		// maps user names to user objects
 		std::map<std::string, User*> m_Users;
 };

@@ -32,8 +32,15 @@
 
 class Packet {
 	public:
+		enum Result { NoError=0, DataCorrupt, Disconnected, TimedOut };
+
 		Packet();
 		
+		void rewind(int bytes) { m_Pos-=bytes; }
+
+		int size() const { return m_Size; }
+		bool empty() const { return m_Size==0; }
+
 		void clear();
 		
 		void addByte(uint8_t byte);
@@ -41,13 +48,16 @@ class Packet {
 		void addUint32(uint32_t n);
 		void addString(const std::string &str);
 	
+		uint8_t peekByte() { return m_Buffer[m_Pos]; }
 		uint8_t byte();
 		uint16_t uint16();
 		uint32_t uint32();
 		std::string string();
 		
 		bool write(Socket sock);
-		bool read(Socket socket);
+		Result read(Socket socket);
+
+		void operator<<(Packet &p);
 	
 	private:
 		uint8_t m_Buffer[PACKET_BUFFER_MAX];

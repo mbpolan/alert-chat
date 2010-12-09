@@ -40,6 +40,9 @@ class User {
 
 		// sends the user an updated friend list
 		void sendFriendList();
+
+		// sends a friend's online status update
+		void sendUserStatusUpdate(const std::string &user, bool online);
 	
 		void addFriend(const std::string &userName);
 		void setFriendList(const std::list<std::string> &lst) { m_FriendList=lst; }
