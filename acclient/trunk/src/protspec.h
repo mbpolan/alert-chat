@@ -23,19 +23,20 @@
 #define PROTSPEC_H
 
 // login and logout
-#define PROT_LOGIN		0x01
-#define PROT_LOGOUT		0x02
+#define PROT_LOGIN		  0x01
+#define PROT_LOGOUT		  0x02
 
 // client messages
-#define PROT_CLIENTMSG	0x10
+#define PROT_CLIENTMSG		  0x10
 
 // authentication
-#define PROT_REQAUTH	0x20
+#define PROT_REQAUTH		  0x20
 
 // friend lists and status updates
-#define PROT_FRIENDLIST	0x25
+#define PROT_FRIENDLIST		  0x25
+#define PROT_STATUSUPDATE	  0x26
 
 // peer to peer communication
-#define PROT_TEXTMESSAGE	0x40
+#define PROT_TEXTMESSAGE	  0x40
 
 #endif

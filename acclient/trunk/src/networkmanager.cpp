@@ -77,15 +77,15 @@ void NetworkManager::onDisconnected() {
 void NetworkManager::onSocketError(QAbstractSocket::SocketError error) {
 	switch(error) {
 		case QAbstractSocket::HostNotFoundError: {
-			emit message("Error: unable to find host", true);
+			emit message("Error: unable to find host", false);
 		} break;
 		
 		case QAbstractSocket::ConnectionRefusedError: {
-			emit message("Error: connection refused", true);
+			emit message("Error: connection refused", false);
 		} break;
 		
 		default: {
-			emit message(QString("Error code: %1").arg(error), true);
+			emit message(QString("Error code: %1").arg(error), false);
 		} break;
 	}
 }
@@ -134,6 +134,9 @@ void NetworkManager::handlePacket(Packet &p) {
 
 		// an updated friend list arrived
 		case PROT_FRIENDLIST: serverSentFriendList(p); break;
+
+		// a user status has changed
+		case PROT_STATUSUPDATE: serverSentUserStatusUpdate(p); break;
 		
 		default: qDebug() << "Unknown header: " << header; break;
 	}
@@ -149,4 +152,12 @@ void NetworkManager::serverSentFriendList(Packet &p) {
 	  friends.append(p.string());
 
     emit updateFriendList(friends);
+}
+
+void NetworkManager::serverSentUserStatusUpdate(Packet &p) {
+    // username followed by status
+    QString username=p.string();
+    int status=p.uint16();
+
+    emit updateUserStatus(username, status);
 }

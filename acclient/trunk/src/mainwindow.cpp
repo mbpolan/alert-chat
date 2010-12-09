@@ -29,6 +29,9 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
 
+    // prepare the friend list with default items
+    resetTreeView();
+
      // connect actions
     connect(ui->actionAbout, SIGNAL(triggered()), this, SLOT(onAbout()));
     connect(ui->actionConnect, SIGNAL(triggered()), this, SLOT(onConnect()));
@@ -42,6 +45,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(m_Network, SIGNAL(disconnected()), this, SLOT(onNetDisconnected()));
 	connect(m_Network, SIGNAL(message(QString,bool)), this, SLOT(onNetMessage(QString,bool)));
 	connect(m_Network, SIGNAL(updateFriendList(QList<QString>)), this, SLOT(onNetUpdateFriendList(QList<QString>)));
+	connect(m_Network, SIGNAL(updateUserStatus(QString,int)), this, SLOT(onNetUpdateUserStatus(QString,int)));
 }
 
 MainWindow::~MainWindow() {
@@ -52,7 +56,7 @@ void MainWindow::onConnect() {
 	ui->actionConnect->setEnabled(false);
 	ui->actionDisconnect->setEnabled(true);
 
-	m_Network->connect("127.0.0.1", 9090);
+	m_Network->connect("172.30.64.204", 9090);
 }
 
 void MainWindow::onDisconnect() {
@@ -61,14 +65,18 @@ void MainWindow::onDisconnect() {
 
 void MainWindow::onNetAuth() {
 	LoginDialog ld(this);
-	if (ld.exec()==QDialog::Accepted)
-		m_Network->performLogin(ld.username(), ld.password());
+	if (ld.exec()==QDialog::Accepted) {
+		m_User=ld.username();
+		m_Network->performLogin(m_User, ld.password());
+	}
 	else
 		m_Network->terminate();
 }
 
 void MainWindow::onNetConnected() {
     statusBar()->showMessage(tr("Connected to server"));
+
+    setWindowTitle("Alert-Chat: "+m_User);
 }
 
 void MainWindow::onNetDisconnected() {
@@ -76,18 +84,49 @@ void MainWindow::onNetDisconnected() {
 	ui->actionConnect->setEnabled(true);
 	ui->actionDisconnect->setEnabled(false);
 
+	resetTreeView();
+
 }
 
 void MainWindow::onNetMessage(QString msg, bool passive) {
 	if (passive)
 		statusBar()->showMessage(msg);
-	else
+	else {
 		QMessageBox::information(this, tr("Message"), msg);
+
+		// TODO: have the networkmanager flag a critical state
+		ui->actionConnect->setEnabled(true);
+		ui->actionDisconnect->setEnabled(false);
+	}
 }
 
 void MainWindow::onNetUpdateFriendList(QList<QString> lst) {
-    // TODO: update the friend list tree
-    qDebug() << lst;
+    for (QList<QString>::iterator it=lst.begin(); it!=lst.end(); ++it) {
+	  QStringList text;
+	  text << (*it);
+
+	  QTreeWidgetItem *item=new QTreeWidgetItem(ui->friendView->topLevelItem(1), text);
+    }
+}
+
+void MainWindow::onNetUpdateUserStatus(QString username, int status) {
+    // online or offline
+    if (status==0 || status==1) {
+	  QList<QTreeWidgetItem*> items=ui->friendView->findItems(username, Qt::MatchExactly | Qt::MatchRecursive);
+	  if (items.empty())
+		qDebug() << "User " << username << " not found!";
+
+	  QTreeWidgetItem *item=items.first();
+	  item->parent()->removeChild(item);
+
+	  // repare this item based on the user's status
+	  if (status==1)
+		ui->friendView->topLevelItem(0)->addChild(item);
+	  else
+		ui->friendView->topLevelItem(1)->addChild(item);
+    }
+
+    // future: other types of user status (idle, away, etc)
 }
 
 void MainWindow::onQuit() {
@@ -96,4 +135,17 @@ void MainWindow::onQuit() {
 
 void MainWindow::onAbout() {
 
+}
+
+void MainWindow::resetTreeView() {
+    ui->friendView->clear();
+
+    // prepare the tree widget with predefined groups
+    QStringList lst;
+    lst << "Online";
+    ui->friendView->addTopLevelItem(new QTreeWidgetItem(ui->friendView, lst));
+
+    lst.clear();
+    lst << "Offline";
+    ui->friendView->addTopLevelItem(new QTreeWidgetItem(ui->friendView, lst));
 }

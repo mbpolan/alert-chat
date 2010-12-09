@@ -46,6 +46,7 @@ class NetworkManager : public QObject {
 		void disconnected();
 		void message(QString, bool);
 		void updateFriendList(QList<QString>);
+		void updateUserStatus(QString, int);
 	
 	private slots:
 		void onConnected();
@@ -57,6 +58,7 @@ class NetworkManager : public QObject {
     private:
 		void handlePacket(Packet &p);
 		void serverSentFriendList(Packet &p);
+		void serverSentUserStatusUpdate(Packet &p);
 		
 		QTcpSocket *m_Socket;
 };
