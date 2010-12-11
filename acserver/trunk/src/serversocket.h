@@ -27,22 +27,63 @@
 
 #include "definitions.h"
 
+/**
+ * Encapsulation of low level socket functions for portability.
+ * This class provides a high level C++ API to the low level socket functions, independent
+ * of the operating system this code is compiled on. Note that currently, only BSD sockets
+ * are supported, so Windows performance may not be as good as it should be. Support for
+ * both IPv4 and IPv6 is implemented.
+ *
+ * The ServerSocket class provides methods to create, bind, listen on, and accept incoming
+ * client connections. Error reporting is done by exceptions, which are thrown for the bind()
+ * and listen() methods. The internal backlog of connections is assumed to be a constant defined
+ * in the code.
+ */
 class ServerSocket {
 	public:
+		/**
+		 * Exception thrown by the ServerSocket class upon encountering an unrecoverable error.
+		 */
 		class Exception: public std::runtime_error {
 			public:
+				/**
+				 * Constructs an exception with the given error message.
+				 */
 				Exception(const std::string &msg): std::runtime_error(msg) { };
 		};
 	
 	public:
+		/**
+		 * Constructs an empty and invalid server socket.
+		 */
 		ServerSocket();
 		
+		/**
+		 * Closes this server socket, disallowing all future client connections.
+		 */
 		void close();
+
+		/**
+		 * Tries to bind this socket to the given address and port.
+		 */
 		void bind(const std::string &ip, int port) throw(Exception&);
+
+		/**
+		 * Begins listening on the server socket.
+		 */
 		void listen() throw(Exception&);
+
+		/**
+		 * Waits for an accepts new client connections.
+		 * Client IP address are then stored in the first parameter for future reference.
+		 *
+		 * @param clientIp The client's IP address.
+		 * @return A socket file descriptor for the client.
+		 */
 		int accept(std::string &clientIp);
 		
 	private:
+		/// The socket the server listens on.
 		Socket m_Socket;
 };
 

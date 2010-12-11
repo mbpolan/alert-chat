@@ -32,8 +32,8 @@ void User::kick() {
 	m_ComProtocol->disconnect();
 }
 
-void User::sendTextMessage(const std::string &msg) {
-	m_ComProtocol->sendTextMessage(msg);
+void User::sendTextMessage(const std::string &from, const std::string &msg) {
+	m_ComProtocol->sendTextMessage(from, msg);
 }
 
 // sends the user an updated friend list

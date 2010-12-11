@@ -28,22 +28,69 @@
 #include "definitions.h"
 #include "variable.h"
 
-typedef std::map<std::string, Variable> VariableMap;
-
+/**
+ * Class responsible for loading and storing values that are written
+ * in the server.conf configuration file.
+ * Values are stored in instances of the Variable class, which assists in keeping the
+ * internal database simple. Furthermore, it provides a simple interface for fetching
+ * values from the file by letting the programmer assign a global manager instance that
+ * can be accessed across the code.
+ */
 class ConfigManager {
 	public:
+		/**
+		 * Creates a manager for the given file.
+		 *
+		 * @param file Path to the configuration file to load.
+		 */
 		ConfigManager(const std::string &file);
+
+		/**
+		 * Frees any memory associated with a configuration file.
+		 */
 		~ConfigManager();
 
+		/**
+		 * Returns a pointer to the default configuration manager which was set
+		 * at some point in the code.
+		 *
+		 * @return Pointer to the global ConfigManager, or NULL if one was never set.
+		 */
 		static ConfigManager* manager();
+
+		/**
+		 * Sets a given configuration manager as the default.
+		 * @param cm Pointer to a ConfigManager object, or NULL to clear any previously
+		 * set configuration managers.
+		 */
 		static void setDefaultManager(ConfigManager *cm);
 
+		/**
+		 * Attempts to parse the configuration file, who's path is pointed to by
+		 * the first argument supplied to the constructor.
+		 *
+		 * @return True if parsing succeeded, or false otherwise.
+		 */
 		bool parse();
 
+		/**
+		 * Returns the value associated with the given key. If no such key exists,
+		 * then an invalid Variable object is returned.
+		 *
+		 * @param key The key to look up.
+		 *
+		 * @return The value associated with said key, or null Variable object if there is no such key.
+		 */
 		Variable valueForKey(const std::string &key);
 
 	private:
+		/// Typedef of a map, associating string keys with Variable values.
+		typedef std::map<std::string, Variable> VariableMap;
+
+		/// The file assigned to this configuration manager.
 		std::string m_File;
+
+		/// Internal hash map where values are mapped to their corresponding keys.
 		VariableMap m_Keys;
 };
 

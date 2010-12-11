@@ -27,37 +27,97 @@
 
 #include "protocol.h"
 
+/**
+ * Data object for a connected user.
+ * The User class stores and handles various operations involving this user. For example,
+ * after a successful authentication, the class contains the username and password of
+ * this user. Sending text messages to this user is done by the provided functions, which
+ * wrap the underlying protocol. All protocol operations are in terms of this user; that is,
+ * sendTextMessage() for example, will send a text message to THIS user.
+ */
 class User {
 	public:
+		/// A user's status.
 		enum Status { Offline=0, Online };
 
+		/**
+		 * Constructs a user object for the given username and password.
+		 *
+		 * @param username The username of this user.
+		 * @param password The password of this user.
+		 */
 		User(const std::string &username, const std::string &password);
 
+		/**
+		 * Sets the protocol for this user.
+		 * This function MUST be called to ensure proper operation.
+		 *
+		 * @param p Pointer to a protocol object for this user.
+		 */
 		void setProtocol(Protocol *p) { m_ComProtocol=p; }
 
+		/**
+		 * Removes the user from the server.
+		 */
 		void kick();
 
+		/**
+		 * Returns the username of this user.
+		 */
 		std::string username() const { return m_Username; }
 
-		// sends this user a text message
-		void sendTextMessage(const std::string &msg);
+		/**
+		 * Sends this user a text message from another.
+		 *
+		 * @param from The username of the sender.
+		 * @param msg The message string.
+		 */
+		void sendTextMessage(const std::string &from, const std::string &msg);
 
-		// sends the user an updated friend list
+		/**
+		 * Sends this user an updated friend list.
+		 */
 		void sendFriendList();
 
-		// sends a friend's online status update
+		/**
+		 * Sends this user a status update of another user.
+		 *
+		 * @param user The username of the user in question.
+		 * @param online Whether or not the other user is online.
+		 */
 		void sendUserStatusUpdate(const std::string &user, bool online);
 	
+		/**
+		 * Adds a friend to this user's friend list.
+		 * This will cause an update to the database.
+		 *
+		 * @param userName The username of another user to add.
+		 */
 		void addFriend(const std::string &userName);
+
+		/**
+		 * Sets the friend list for this user.
+		 *
+		 * @param lst A list of usernames who are this user's friends.
+		 */
 		void setFriendList(const StringList &lst) { m_FriendList=lst; }
+
+		/**
+		 * Returns a list of usernames who are designated as friends of this user.
+		 */
 		StringList friends() const { return m_FriendList; }
 	
 	private:
+		/// Protocol for this user.
 		Protocol *m_ComProtocol;
 
+		/// The user's username.
 		std::string m_Username;
+
+		/// The user's password.
 		std::string m_Password;
 		
+		/// The user's list of friends.
 		StringList m_FriendList;
 };
 

@@ -75,9 +75,13 @@ void UserManager::kickAll() {
 	unlock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
 }
 
-void UserManager::deliverTextMessageTo(const std::string &who, const std::string &message) {
+void UserManager::deliverTextMessageTo(const std::string &sender, const std::string &who, const std::string &message) {
+	lock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
+
 	if (m_Users.find(who)!=m_Users.end())
-		m_Users[who]->sendTextMessage(message);
+		m_Users[who]->sendTextMessage(sender, message);
+
+	unlock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
 }
 
 void UserManager::broadcastUserStatus(User *user, User::Status status) {

@@ -22,6 +22,7 @@
 #ifndef THREAD_H
 #define THREAD_H
 
+/// A collection of thread functions, independent of the underlying operating system.
 namespace Threads {
 
 #ifdef __LINUX__
@@ -31,12 +32,19 @@ namespace Threads {
 typedef pthread_t thread_t;
 typedef pthread_mutex_t mutex_t;
 
+/// Creates a mutex.
 #define createMutex(x) pthread_mutex_init(x, NULL)
+
+/// Destroys a mutex.
 #define destroyMutex(x) pthread_mutex_destroy(x)
 
+/// Locks a mutex.
 #define lock(x) pthread_mutex_lock(x)
+
+/// Unlocks a mutex.
 #define unlock(x) pthread_mutex_unlock(x)
 
+/// Terminates the current thread.
 #define exitThread() pthread_exit(NULL)
 
 typedef void* (*ThreadFunc)(void*);
@@ -45,9 +53,17 @@ typedef void* (*ThreadFunc)(void*);
 #define MUTEX_USERMANAGER	0
 #define TOTAL_MUTEXES		1
 
+/// Global array of mutexes.
 static mutex_t g_Mutexes[TOTAL_MUTEXES];
 
-// create a new thread with given routine and parameter
+/**
+ * Creates a thread for the given routine, and (optionally) a parameter to pass to the routine
+ *
+ * @param routine The thread routine.
+ * @param param Parameter to pass to the routine.
+ * @param status Sets the outcome of the function to this variable.
+ * @return A pthread_t handle to the created thread..
+ */
 static thread_t createThread(ThreadFunc routine, void *param, int &status) {
 	thread_t h;
 	pthread_attr_t attr;
@@ -62,7 +78,9 @@ static thread_t createThread(ThreadFunc routine, void *param, int &status) {
 	return h;
 }
 
-// join a thread
+/**
+ * Joins a thread to the main thread.
+ */
 static void joinThread(thread_t handle) {
 	pthread_join(handle, NULL);
 }

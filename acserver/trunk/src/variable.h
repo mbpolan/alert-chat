@@ -25,25 +25,68 @@
 #include <cctype>
 #include <iostream>
 
+/**
+ * Object that is capable of storing various data types.
+ * When multiple data types need to be stored in, say, a vector, the Variable class
+ * can be used to provide a transparent way of storing said values without having to
+ * use multiple containers specific to certain data types.
+ *
+ * The Variable class keeps track of what data type is was set to hold. Think of this
+ * class as a "C++" void pointer encapsulation, only much safer.
+ */
 class Variable {
 	public:
+		/// The data type this object is storing.
 		enum Type { Null=0, Integer, String };
 
+		/**
+		 * Creates a null Variable object.
+		 * This is useful for error reporting. Consider a hash map of values which are of
+		 * this type. If the user requests a key that's not in the map, a null Variable can
+		 * be returned to signal the error condition.
+		 */
 		Variable();
+
+		/**
+		 * Creates a Variable object that stores an integer.
+		 */
 		Variable(int n);
+
+		/**
+		 * Creates a Variable object that stores a string.
+		 */
 		Variable(const std::string &str);
 
+		/**
+		 * Checks whether or not this Variable object contains data.
+		 *
+		 * @return True if NO data is in this object, false otherwise.
+		 */
 		bool isNull() { return m_DataType==Null; }
 
+		/**
+		 * Returns the type of data that is stored in this Variable object.
+		 */
 		Type dataType() const { return m_DataType; }
 
+		/**
+		 * Returns the internal data as an integer.
+		 */
 		int toInt() const;
+
+		/**
+		 * Returns the internal data as a string.
+		 */
 		std::string toString() const;
 
 	private:
+		/// An integer value.
 		int m_IntValue;
+
+		/// A string value.
 		std::string m_StringValue;
 
+		/// The type of data stored.
 		Type m_DataType;
 };
 
