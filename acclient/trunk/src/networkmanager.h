@@ -39,6 +39,8 @@ class NetworkManager : public QObject {
 		void disconnect();
 		
 		void terminate();
+
+		void sendTextMessage(const QString &toWhom, const QString &text);
 	
     signals:
 		void authenticate();
@@ -47,6 +49,7 @@ class NetworkManager : public QObject {
 		void message(QString, bool);
 		void updateFriendList(QList<QString>);
 		void updateUserStatus(QString, int);
+		void textMessage(QString,QString);
 	
 	private slots:
 		void onConnected();
@@ -59,6 +62,7 @@ class NetworkManager : public QObject {
 		void handlePacket(Packet &p);
 		void serverSentFriendList(Packet &p);
 		void serverSentUserStatusUpdate(Packet &p);
+		void serverSentTextMessage(Packet &p);
 		
 		QTcpSocket *m_Socket;
 };

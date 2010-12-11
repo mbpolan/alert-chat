@@ -11,10 +11,13 @@ UI_DIR = ui
 MOC_DIR = moc
 
 # Input
-HEADERS += src/logindialog.h src/mainwindow.h src/networkmanager.h src/packet.h src/protspec.h
-FORMS += ui/logindialog.ui ui/mainwindow.ui
+HEADERS += src/logindialog.h src/mainwindow.h src/networkmanager.h src/packet.h src/protspec.h \
+    src/preferencesdialog.h
+FORMS += ui/logindialog.ui ui/mainwindow.ui \
+    ui/preferencesdialog.ui
 SOURCES += src/client.cpp \
            src/logindialog.cpp \
            src/mainwindow.cpp \
            src/networkmanager.cpp \
-	   src/packet.cpp
+	   src/packet.cpp \
+    src/preferencesdialog.cpp

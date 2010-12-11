@@ -66,6 +66,16 @@ void NetworkManager::terminate() {
 	m_Socket->abort();
 }
 
+void NetworkManager::sendTextMessage(const QString &toWhom, const QString &text) {
+    Packet p;
+
+    p.addByte(PROT_TEXTMESSAGE);
+    p.addString(toWhom);
+    p.addString(text);
+
+    p.write(m_Socket);
+}
+
 void NetworkManager::onConnected() {
 	emit connected();
 }
@@ -85,7 +95,7 @@ void NetworkManager::onSocketError(QAbstractSocket::SocketError error) {
 		} break;
 		
 		default: {
-			emit message(QString("Error code: %1").arg(error), false);
+			emit message(QString("Error code: %1").arg(error), true);
 		} break;
 	}
 }
@@ -129,7 +139,7 @@ void NetworkManager::handlePacket(Packet &p) {
 		// server requires authentication
 		case PROT_REQAUTH: emit authenticate(); break;
 		
-		// text message from the server
+		// message from the server
 		case PROT_CLIENTMSG: emit message(p.string(), false); break;
 
 		// an updated friend list arrived
@@ -137,6 +147,9 @@ void NetworkManager::handlePacket(Packet &p) {
 
 		// a user status has changed
 		case PROT_STATUSUPDATE: serverSentUserStatusUpdate(p); break;
+
+		// message from another user
+		case PROT_TEXTMESSAGE: serverSentTextMessage(p); break;
 		
 		default: qDebug() << "Unknown header: " << header; break;
 	}
@@ -160,4 +173,12 @@ void NetworkManager::serverSentUserStatusUpdate(Packet &p) {
     int status=p.uint16();
 
     emit updateUserStatus(username, status);
+}
+
+void NetworkManager::serverSentTextMessage(Packet &p) {
+    // get the sender
+    QString sender=p.string();
+    QString text=p.string();
+
+    emit textMessage(sender, text);
 }
