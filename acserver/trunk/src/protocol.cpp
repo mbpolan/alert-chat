@@ -113,7 +113,7 @@ void Protocol::clientSentTextMessage(Packet &p) {
 	// just contains a string
 	std::string message=p.string();
 
-	UserManager::defaultManager()->deliverTextMessageTo(recipient, message);
+	UserManager::defaultManager()->deliverTextMessageTo(m_User->username(), recipient, message);
 }
 
 void Protocol::sendQueuedPackets() {
@@ -126,11 +126,12 @@ void Protocol::sendQueuedPackets() {
 	m_OutgoingPackets.clear();
 }
 
-void Protocol::sendTextMessage(const std::string &msg) {
+void Protocol::sendTextMessage(const std::string &from, const std::string &msg) {
 	Packet p;
 
 	// simple enough: the packet just contains the message
 	p.addByte(PROT_TEXTMESSAGE);
+	p.addString(from);
 	p.addString(msg);
 
 	m_OutgoingPackets.push_back(p);

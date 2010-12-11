@@ -140,16 +140,3 @@ Packet::Result Packet::read(Socket fd) {
 	
 	return NoError;
 }
-
-void Packet::operator<<(Packet &p) {
-	if (p.size()+m_Size>PACKET_BUFFER_MAX)
-		return;
-
-	int bytes=0;
-	while(!p.empty()) {
-		addByte(p.byte());
-		bytes++;
-	}
-
-	p.rewind(bytes);
-}
