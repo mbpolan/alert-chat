@@ -17,54 +17,16 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-// mainwindow.h: definition of the MainWindow class
+// preferencesdialog.cpp: implementation of the PreferencesDialog class
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#include "preferencesdialog.h"
+#include "ui_preferencesdialog.h"
 
-#include <QList>
-#include <QMainWindow>
-#include <QTreeWidgetItem>
-
-#include "networkmanager.h"
-
-namespace Ui {
-    class MainWindow;
+PreferencesDialog::PreferencesDialog(QWidget *parent) :
+	  QDialog(parent), ui(new Ui::PreferencesDialog) {
+    ui->setupUi(this);
 }
 
-class MainWindow: public QMainWindow {
-    Q_OBJECT
-
-    public:
-		explicit MainWindow(QWidget *parent = 0);
-		~MainWindow();
-
-    private slots:
-		void onConnect();
-		void onDisconnect();
-
-		void onPreferences();
-
-		void onFriendNameClicked(QTreeWidgetItem*, int);
-
-		void onNetAuth();
-		void onNetConnected();
-		void onNetDisconnected();
-		void onNetMessage(QString, bool);
-		void onNetUpdateFriendList(QList<QString>);
-		void onNetUpdateUserStatus(QString, int);
-		void onNetTextMessage(QString, QString);
-
-		void onQuit();
-		void onAbout();
-
-    private:
-		void resetTreeView();
-
-		NetworkManager *m_Network;
-		QString m_User;
-		
-		Ui::MainWindow *ui;
-};
-
-#endif // MAINWINDOW_H
+PreferencesDialog::~PreferencesDialog() {
+    delete ui;
+}

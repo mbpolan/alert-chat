@@ -19,10 +19,12 @@
  ***************************************************************************/
 // mainwindow.cpp: implementation of MainWindow class
 
+#include <QInputDialog>
 #include <QMessageBox>
 
 #include "logindialog.h"
 #include "mainwindow.h"
+#include "preferencesdialog.h"
 #include "ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -36,6 +38,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionAbout, SIGNAL(triggered()), this, SLOT(onAbout()));
     connect(ui->actionConnect, SIGNAL(triggered()), this, SLOT(onConnect()));
     connect(ui->actionDisconnect, SIGNAL(triggered()), this, SLOT(onDisconnect()));
+    connect(ui->actionPreferences, SIGNAL(triggered()), this, SLOT(onPreferences()));
     connect(ui->actionQuit, SIGNAL(triggered()), this, SLOT(onQuit()));
 		
 	// allocate the network manager
@@ -46,6 +49,11 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(m_Network, SIGNAL(message(QString,bool)), this, SLOT(onNetMessage(QString,bool)));
 	connect(m_Network, SIGNAL(updateFriendList(QList<QString>)), this, SLOT(onNetUpdateFriendList(QList<QString>)));
 	connect(m_Network, SIGNAL(updateUserStatus(QString,int)), this, SLOT(onNetUpdateUserStatus(QString,int)));
+	connect(m_Network, SIGNAL(textMessage(QString,QString)), this, SLOT(onNetTextMessage(QString,QString)));
+
+	// connect treeview actions
+	connect(ui->friendView, SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),
+		  this, SLOT(onFriendNameClicked(QTreeWidgetItem*,int)));
 }
 
 MainWindow::~MainWindow() {
@@ -61,6 +69,24 @@ void MainWindow::onConnect() {
 
 void MainWindow::onDisconnect() {
 	m_Network->disconnect();
+}
+
+void MainWindow::onPreferences() {
+    PreferencesDialog pd(this);
+    if (pd.exec()==QDialog::Accepted) {
+	  // TODO
+    }
+}
+
+void MainWindow::onFriendNameClicked(QTreeWidgetItem *item, int) {
+    if (item && item->text(0)!="Online" && item->text(0)!="Offline") {
+	  // open a dialog window for this conversation
+	  bool ok;
+	  QString text=QInputDialog::getText(this, tr("Send Message"), tr("Message"), QLineEdit::Normal, QString(), &ok);
+
+	  if (ok && !text.isEmpty())
+		m_Network->sendTextMessage(item->text(0), text);
+    }
 }
 
 void MainWindow::onNetAuth() {
@@ -85,6 +111,8 @@ void MainWindow::onNetDisconnected() {
 	ui->actionDisconnect->setEnabled(false);
 
 	resetTreeView();
+
+	setWindowTitle("Alert-Chat");
 
 }
 
@@ -127,6 +155,10 @@ void MainWindow::onNetUpdateUserStatus(QString username, int status) {
     }
 
     // future: other types of user status (idle, away, etc)
+}
+
+void MainWindow::onNetTextMessage(QString sender, QString text) {
+    QMessageBox::information(this, QString("Message from: %1").arg(sender), text);
 }
 
 void MainWindow::onQuit() {
