@@ -22,11 +22,30 @@
 #include "preferencesdialog.h"
 #include "ui_preferencesdialog.h"
 
-PreferencesDialog::PreferencesDialog(QWidget *parent) :
+PreferencesDialog::PreferencesDialog(ConfigLoader *config, QWidget *parent) :
 	  QDialog(parent), ui(new Ui::PreferencesDialog) {
     ui->setupUi(this);
+
+    // synchronize the widgets with the data
+    ui->server->setText(config->valueForKey("server"));
+    ui->port->setValue(config->valueForKey("port").toInt());
+
+    ui->saveChatHistory->setChecked(config->valueForKey("saveChatHistory").toInt());
+    ui->promptUnknown->setChecked(config->valueForKey("promptUnknown").toInt());
+
+    ui->enableSounds->setChecked(config->valueForKey("enableSounds").toInt());
 }
 
 PreferencesDialog::~PreferencesDialog() {
     delete ui;
+}
+
+void PreferencesDialog::synchronize(ConfigLoader *config) {
+    config->clear();
+
+    config->setValueForKey("server", ui->server->text());
+    config->setValueForKey("port", QString("%1").arg(ui->port->value()));
+    config->setValueForKey("saveChatHistory", QString("%1").arg(ui->saveChatHistory->isChecked()));
+    config->setValueForKey("promptUnknown", QString("%1").arg(ui->promptUnknown->isChecked()));
+    config->setValueForKey("enableSounds", QString("%1").arg(ui->enableSounds->isChecked()));
 }

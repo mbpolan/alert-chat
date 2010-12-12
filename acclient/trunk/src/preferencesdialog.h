@@ -24,6 +24,8 @@
 
 #include <QDialog>
 
+#include "configloader.h"
+
 namespace Ui {
     class PreferencesDialog;
 }
@@ -32,8 +34,10 @@ class PreferencesDialog: public QDialog {
     Q_OBJECT
 
     public:
-	  explicit PreferencesDialog(QWidget *parent=NULL);
+	  explicit PreferencesDialog(ConfigLoader *config, QWidget *parent=NULL);
 	  ~PreferencesDialog();
+
+	  void synchronize(ConfigLoader *config);
 
     private:
 	  Ui::PreferencesDialog *ui;

@@ -40,7 +40,7 @@
              </widget>
             </item>
             <item row="0" column="1">
-             <widget class="QLineEdit" name="lineEdit">
+             <widget class="QLineEdit" name="server">
               <property name="toolTip">
                <string>Hostname or IP address of the server to connect to.</string>
               </property>
@@ -54,7 +54,7 @@
              </widget>
             </item>
             <item row="1" column="1">
-             <widget class="QSpinBox" name="spinBox">
+             <widget class="QSpinBox" name="port">
               <property name="toolTip">
                <string>The port of the above server.</string>
               </property>
@@ -80,7 +80,7 @@
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_2">
             <item>
-             <widget class="QCheckBox" name="checkBox_2">
+             <widget class="QCheckBox" name="saveChatHistory">
               <property name="toolTip">
                <string>Logs conversations with users and saves them on your hard drive.</string>
               </property>
@@ -90,7 +90,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QCheckBox" name="checkBox_3">
+             <widget class="QCheckBox" name="promptUnknown">
               <property name="toolTip">
                <string>Displays a preemprive warning message before showing messages from users who are not on your friend list.</string>
               </property>
@@ -112,7 +112,7 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_5">
        <item>
-        <widget class="QCheckBox" name="checkBox">
+        <widget class="QCheckBox" name="enableSounds">
          <property name="toolTip">
           <string>Enable custom sound effects for the client.</string>
          </property>
@@ -122,7 +122,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QTreeWidget" name="treeWidget">
+        <widget class="QTreeWidget" name="soundView">
          <column>
           <property name="text">
            <string>Action</string>

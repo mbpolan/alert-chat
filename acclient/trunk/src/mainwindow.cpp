@@ -19,6 +19,8 @@
  ***************************************************************************/
 // mainwindow.cpp: implementation of MainWindow class
 
+#include <QDir>
+#include <QDesktopServices>
 #include <QInputDialog>
 #include <QMessageBox>
 
@@ -30,6 +32,10 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
+
+    // load the configuration file
+    m_Config=new ConfigLoader();
+    m_Config->loadConfiguration(QDir::currentPath()+"/client.conf");
 
     // prepare the friend list with default items
     resetTreeView();
@@ -64,7 +70,8 @@ void MainWindow::onConnect() {
 	ui->actionConnect->setEnabled(false);
 	ui->actionDisconnect->setEnabled(true);
 
-	m_Network->connect("172.30.64.204", 9090);
+	m_Network->connect(m_Config->valueForKey("server"),
+				 m_Config->valueForKey("port").toInt());
 }
 
 void MainWindow::onDisconnect() {
@@ -72,9 +79,11 @@ void MainWindow::onDisconnect() {
 }
 
 void MainWindow::onPreferences() {
-    PreferencesDialog pd(this);
+    PreferencesDialog pd(m_Config, this);
     if (pd.exec()==QDialog::Accepted) {
-	  // TODO
+	  // synchornize new preferences to internal configuration and save it
+	  pd.synchronize(m_Config);
+	  m_Config->saveConfiguration(QDir::currentPath()+"/client.conf");
     }
 }
 
