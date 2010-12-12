@@ -26,6 +26,7 @@
 #include <QMainWindow>
 #include <QTreeWidgetItem>
 
+#include "configloader.h"
 #include "networkmanager.h"
 
 namespace Ui {
@@ -60,6 +61,8 @@ class MainWindow: public QMainWindow {
 
     private:
 		void resetTreeView();
+
+		ConfigLoader *m_Config;
 
 		NetworkManager *m_Network;
 		QString m_User;
