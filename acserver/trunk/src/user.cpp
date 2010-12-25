@@ -36,6 +36,10 @@ void User::sendTextMessage(const std::string &from, const std::string &msg) {
 	m_ComProtocol->sendTextMessage(from, msg);
 }
 
+void User::sendServerMessage(const std::string &str) {
+	m_ComProtocol->sendServerMessage(str);
+}
+
 // sends the user an updated friend list
 void User::sendFriendList() {
 	m_ComProtocol->sendFriendList(m_FriendList);

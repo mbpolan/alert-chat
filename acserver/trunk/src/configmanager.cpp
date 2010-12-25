@@ -30,7 +30,7 @@ ConfigManager::ConfigManager(const std::string &file) {
 	m_File=file;
 }
 
-ConfigManager::ConfigManager* manager() {
+ConfigManager::ConfigManager* ConfigManager::manager() {
 	return g_Manager;
 }
 

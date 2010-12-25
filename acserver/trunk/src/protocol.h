@@ -91,6 +91,11 @@ class Protocol {
 		void handlePacket(Packet &p);
 
 		/**
+		 * Handler for when a client sends an add friend request.
+		 */
+		void clientSentAddFriend(Packet &p);
+
+		/**
 		 * Handler for when a client has sent the server a text message.
 		 */
 		void clientSentTextMessage(Packet &p);
@@ -107,6 +112,13 @@ class Protocol {
 		 * @param msg The string containing the message.
 		 */
 		void sendTextMessage(const std::string &from, const std::string &msg);
+
+		/**
+		 * Sends the client a server-level message.
+		 *
+		 * @param msg The string containing the message.
+		 */
+		void sendServerMessage(const std::string &msg);
 
 		/**
 		 * Sends a friend list to the user of this protocol.

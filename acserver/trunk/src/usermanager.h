@@ -81,6 +81,16 @@ class UserManager {
 		void kickAll();
 
 		/**
+		 * Tries to add the given username to a user's friend list.
+		 * This function also checks to see if the given username even exists in the
+		 * database, and if he doesn't, then it informs the user as such.
+		 *
+		 * @param target The user who wishes to add the friend.
+		 * @param friend Username of the friend to add.
+		 */
+		void addFriendTo(const std::string &target, const std::string &username);
+
+		/**
 		 * Coordinates sending a text message from one user to another.
 		 *
 		 * @param sender The username of the user who sent the message.

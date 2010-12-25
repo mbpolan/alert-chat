@@ -75,6 +75,13 @@ class User {
 		void sendTextMessage(const std::string &from, const std::string &msg);
 
 		/**
+		 * Sends this user a server-level message.
+		 *
+		 * @param str The message text.
+		 */
+		void sendServerMessage(const std::string &str);
+
+		/**
 		 * Sends this user an updated friend list.
 		 */
 		void sendFriendList();

@@ -27,7 +27,7 @@
 #define PROT_LOGOUT					0x02
 
 // server messages
-#define PROT_CLIENTMSG				0x10
+#define PROT_SERVERMESSAGE			0x10
 
 // authentication
 #define PROT_REQAUTH				0x20
@@ -35,6 +35,7 @@
 // friend lists and status updates
 #define PROT_FRIENDLIST				0x25
 #define PROT_STATUSUPDATE			0x26
+#define PROT_ADDFRIEND				0x27
 
 // peer to peer communication
 #define PROT_TEXTMESSAGE			0x40

@@ -131,6 +131,14 @@ class Database {
 
 	public:
 		/**
+		 * Creates a database handle, based on what data storage type is defined in
+		 * the configuration file.
+		 *
+		 * @return A handle to a database.
+		 */
+		static Database* getHandle();
+
+		/**
 		 * Returns the last error to have occurred during database operation.
 		 *
 		 * @return Error string if an error happened, or a blank string otherwise.
@@ -157,7 +165,7 @@ class Database {
 		 * @param sql The SQL statement to execute.
 		 * @return Query object which stores the result.
 		 */
-		virtual Database::QueryResult* query(const std::string &sql)=0;
+		virtual Database::QueryResult query(const std::string &sql)=0;
 
 		/**
 		 * Extracts all the users who are on the given user's friend list.
@@ -165,6 +173,18 @@ class Database {
 		 * @return A vector of usernames, or empty if there are none.
 		 */
 		virtual StringList getFriendList(const std::string &username)=0;
+
+		/**
+		 * Returns a formatted SQL statement for case insensitive string comparison.
+		 * This is useful for finding users in the database based strictly on their
+		 * base names, regardless of how the name itself is formatted.
+		 *
+		 * @param column The table column name
+		 * @param str The string to compare against
+		 * @return A formatted SQL statement.
+		 */
+		virtual std::string compareFoldCase(const std::string &column, const std::string &str)=0;
+
 
 	protected:
 		/// Hidden constructor; initializes database members.

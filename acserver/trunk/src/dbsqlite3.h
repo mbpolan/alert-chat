@@ -72,7 +72,7 @@ class DatabaseSQLite3: public Database {
 		 * @param sql The query to execute.
 		 * @return Query object storing the result.
 		 */
-		Database::QueryResult* query(const std::string &sql);
+		Database::QueryResult query(const std::string &sql);
 
 		/**
 		 * Fetches the friend list for the given username.
@@ -81,6 +81,15 @@ class DatabaseSQLite3: public Database {
 		 * @return Vector of usernames, potentially empty if the user has no saved friends.
 		 */
 		StringList getFriendList(const std::string &username);
+
+		/**
+		 * Implements a case insensitive comparison of table columns and values.
+		 *
+		 * @param column The table column name
+		 * @param str The string to compare against
+		 * @return A formatted SQL statement.
+		 */
+		std::string compareFoldCase(const std::string &column, const std::string &str);
 	
 	private:
 		/// The file this database is associated with.

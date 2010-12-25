@@ -19,7 +19,9 @@
  ***************************************************************************/
 // database.cpp: implementation of the Database class
 
+#include "configmanager.h"
 #include "database.h"
+#include "dbsqlite3.h"
 
 Database::QueryResult::QueryResult(int r, int c, const RowTable &rowData,
 					     const StringVector &columnNames) {
@@ -46,6 +48,18 @@ StringVector Database::QueryResult::rowAt(int index) const {
 
 Database::Database() {
 	m_LastError="";
+}
+
+Database* Database::getHandle() {
+	ConfigManager *config=ConfigManager::manager();
+	std::string store=config->valueForKey("data-store").toString();
+
+	// sqlite3 database
+	if (store=="sqlite")
+		return new DatabaseSQLite3(config->valueForKey("sqlite-data-source").toString());
+
+	// otherwise it's an unknown type
+	return NULL;
 }
 
 std::string Database::lastError() {

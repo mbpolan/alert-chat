@@ -19,6 +19,9 @@
  ***************************************************************************/
 // usermanager.cpp: implementation of the UserManager class
 
+#include <sstream>
+
+#include "database.h"
 #include "usermanager.h"
 
 static UserManager *g_UserManager=NULL;
@@ -71,6 +74,62 @@ void UserManager::kickAll() {
 
 	for (std::map<std::string, User*>::iterator it=m_Users.begin(); it!=m_Users.end(); ++it)
 			(*it).second->kick();
+
+	unlock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
+}
+
+void UserManager::addFriendTo(const std::string &target, const std::string &username) {
+	lock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
+
+	// stupidity check: the user tries to add himself
+	if (target==username) {
+		m_Users[target]->sendServerMessage("You can't add yourself to your friend list!");
+		unlock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
+
+		return;
+	}
+
+	Database *db=Database::getHandle();
+	if (db->open()) {
+		// check if the friend exists
+		std::string sql="SELECT * FROM users WHERE ";
+		sql+=db->compareFoldCase("username", username);
+		Database::QueryResult res=db->query(sql);
+
+		if (res.rowCount()>0) {
+			std::string friendId=res.rowAt(0)[0];
+
+			sql="SELECT * FROM users WHERE ";
+			sql+=db->compareFoldCase("username", target);
+			res=db->query(sql);
+
+			// add the friend to the target's list
+			std::stringstream ss;
+			ss << "INSERT INTO friendlists VALUES(NULL,";
+			ss << res.rowAt(0)[0] << ",";
+			ss << friendId << ")";
+
+			Database::QueryResult res=db->query(ss.str());
+
+			// and append the username to the client's current friendlist
+			m_Users[target]->addFriend(username);
+			m_Users[target]->sendFriendList();
+
+			// finally send that user's status
+			m_Users[target]->sendUserStatusUpdate(username, m_Users.find(username)!=m_Users.end());
+		}
+
+		// inform the user that such a username doesn't exist
+		else {
+			std::string msg="The username '";
+			msg+=username;
+			msg+="' does not exist.";
+
+			m_Users[target]->sendServerMessage(msg);
+		}
+	}
+
+	delete db;
 
 	unlock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
 }
