@@ -45,9 +45,11 @@ bool Protocol::authenticate(std::string &username, std::string &password) {
 			username=p.string();
 			password=p.string();
 			
-			DatabaseSQLite3 db("data.db");
-			if (!db.open())
-				std::cerr << "Protocol: unable to open database: " << db.lastError() << std::endl;
+			Database *db=Database::getHandle();
+			if (!db->open()) {
+				std::cerr << "Protocol: unable to open database: " << db->lastError() << std::endl;
+				delete db;
+			}
 			
 			else {
 				std::string sql="SELECT * FROM users WHERE username='";
@@ -57,20 +59,19 @@ bool Protocol::authenticate(std::string &username, std::string &password) {
 				sql+="'";
 				
 				// query the database and see if the user's credentials were valid
-				Database::QueryResult *res=db.query(sql);
-				if (res->error()) {
+				Database::QueryResult res=db->query(sql);
+				if (res.error()) {
 					std::cerr << "Protocol: unable to query database for user " << username << ": ";
-					std::cerr << db.lastError() << std::endl;
-					db.close();
+					std::cerr << db->lastError() << std::endl;
+					db->close();
 					
-					delete res;
 					return false;
 				}
 				
-				int rows=res->rowCount();
+				int rows=res.rowCount();
 
-				db.close();
-				delete res;
+				db->close();
+				delete db;
 				
 				return (rows!=0);
 				
@@ -100,10 +101,19 @@ void Protocol::disconnect() {
 void Protocol::handlePacket(Packet &p) {
 	char header=p.byte();
 	switch(header) {
+		case PROT_ADDFRIEND: clientSentAddFriend(p); break;
+
 		case PROT_TEXTMESSAGE: clientSentTextMessage(p); break;
 
 		default: std::cerr << "Protocol: unknown client packet header: " << std::ios_base::hex << header << std::endl; break;
 	}
+}
+
+void Protocol::clientSentAddFriend(Packet &p) {
+	// target username
+	std::string username=p.string();
+
+	UserManager::defaultManager()->addFriendTo(m_User->username(), username);
 }
 
 void Protocol::clientSentTextMessage(Packet &p) {
@@ -132,6 +142,15 @@ void Protocol::sendTextMessage(const std::string &from, const std::string &msg) 
 	// simple enough: the packet just contains the message
 	p.addByte(PROT_TEXTMESSAGE);
 	p.addString(from);
+	p.addString(msg);
+
+	m_OutgoingPackets.push_back(p);
+}
+
+void Protocol::sendServerMessage(const std::string &msg) {
+	Packet p;
+
+	p.addByte(PROT_SERVERMESSAGE);
 	p.addString(msg);
 
 	m_OutgoingPackets.push_back(p);

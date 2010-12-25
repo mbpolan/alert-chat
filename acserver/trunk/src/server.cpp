@@ -48,7 +48,7 @@ void* connectionHandler(void *param) {
 	if (!p.authenticate(username, password)) {
 		// send error message
 		Packet ret;
-		ret.addByte(PROT_CLIENTMSG);
+		ret.addByte(PROT_SERVERMESSAGE);
 		ret.addString("Incorrect username or password.");
 		
 		ret.write(fd);
@@ -61,15 +61,16 @@ void* connectionHandler(void *param) {
 		p.setUser(user);
 
 		// get this user's friend list
-		DatabaseSQLite3 db("data.db");
-		if (db.open()) {
-			StringList friends=db.getFriendList(username);
-			db.close();
+		Database *db=Database::getHandle();
+		if (db->open()) {
+			StringList friends=db->getFriendList(username);
+			db->close();
 
 			user->setFriendList(friends);
 
 			user->sendFriendList();
 		}
+		delete db;
 
 		// have the receive call timeout after a given time
 		struct timeval tv;
@@ -125,6 +126,8 @@ int main(int argc, char *argv[]) {
 		std::cout << "Error: unable to open server.conf for parsing!\n";
 		exit(1);
 	}
+
+	ConfigManager::setDefaultManager(g_ConfigManager);
 
 	// setup a server socket for incoming connections
 	ServerSocket sock;
