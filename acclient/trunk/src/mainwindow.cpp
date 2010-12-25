@@ -45,6 +45,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionConnect, SIGNAL(triggered()), this, SLOT(onConnect()));
     connect(ui->actionDisconnect, SIGNAL(triggered()), this, SLOT(onDisconnect()));
     connect(ui->actionPreferences, SIGNAL(triggered()), this, SLOT(onPreferences()));
+    connect(ui->actionAdd_By_Name, SIGNAL(triggered()), this, SLOT(onAddFriend()));
     connect(ui->actionQuit, SIGNAL(triggered()), this, SLOT(onQuit()));
 		
 	// allocate the network manager
@@ -85,6 +86,15 @@ void MainWindow::onPreferences() {
 	  pd.synchronize(m_Config);
 	  m_Config->saveConfiguration(QDir::currentPath()+"/client.conf");
     }
+}
+
+void MainWindow::onAddFriend() {
+    bool ok;
+    QString username=QInputDialog::getText(this, tr("Add Friend"),
+							 tr("Username"), QLineEdit::Normal, QString(), &ok);
+
+    if (ok && !username.isEmpty())
+	  m_Network->sendAddFriend(username);
 }
 
 void MainWindow::onFriendNameClicked(QTreeWidgetItem *item, int) {

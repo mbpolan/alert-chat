@@ -101,11 +101,6 @@
     <string>Preferences</string>
    </property>
   </action>
-  <action name="actionClose_server">
-   <property name="text">
-    <string>Close server</string>
-   </property>
-  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>

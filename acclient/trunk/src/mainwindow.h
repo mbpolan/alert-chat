@@ -46,6 +46,8 @@ class MainWindow: public QMainWindow {
 
 		void onPreferences();
 
+		void onAddFriend();
+
 		void onFriendNameClicked(QTreeWidgetItem*, int);
 
 		void onNetAuth();

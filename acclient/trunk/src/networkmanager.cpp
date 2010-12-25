@@ -76,6 +76,15 @@ void NetworkManager::sendTextMessage(const QString &toWhom, const QString &text)
     p.write(m_Socket);
 }
 
+void NetworkManager::sendAddFriend(const QString &username) {
+    Packet p;
+
+    p.addByte(PROT_ADDFRIEND);
+    p.addString(username);
+
+    p.write(m_Socket);
+}
+
 void NetworkManager::onConnected() {
 	emit connected();
 }
@@ -140,7 +149,7 @@ void NetworkManager::handlePacket(Packet &p) {
 		case PROT_REQAUTH: emit authenticate(); break;
 		
 		// message from the server
-		case PROT_CLIENTMSG: emit message(p.string(), false); break;
+		case PROT_SERVERMESSAGE: emit message(p.string(), false); break;
 
 		// an updated friend list arrived
 		case PROT_FRIENDLIST: serverSentFriendList(p); break;
