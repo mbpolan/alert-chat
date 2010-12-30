@@ -23,13 +23,29 @@
 #include "packet.h"
 #include "protspec.h"
 
-NetworkManager::NetworkManager(QObject *parent) : QObject(parent) {
+NetworkManager::NetworkManager(const NetworkManager::ClientMode &mode, QObject *parent) :
+	  QObject(parent) {
     m_Socket=NULL;
+    m_Mode=mode;
 }
 
 NetworkManager::~NetworkManager() {
     if (m_Socket)
 		delete m_Socket;
+}
+
+void NetworkManager::createAccount(const QString &firstName, const QString &lastName,
+					     const QString &location, const QString &username,
+					     const QString &password) {
+    Packet p;
+    p.addByte(PROT_REGISTERACC);
+    p.addString(firstName);
+    p.addString(lastName);
+    p.addString(location);
+    p.addString(username);
+    p.addString(password);
+
+    p.write(m_Socket);
 }
 
 void NetworkManager::connect(const QString &host, int port) {
@@ -42,11 +58,11 @@ void NetworkManager::connect(const QString &host, int port) {
     // connect socket signals
     QObject::connect(m_Socket, SIGNAL(connected()), this, SLOT(onConnected()));
     QObject::connect(m_Socket, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
-	QObject::connect(m_Socket, SIGNAL(readyRead()), this, SLOT(onDataReady()));
-	QObject::connect(m_Socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(onSocketError(QAbstractSocket::SocketError)));
-	QObject::connect(m_Socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)), this, SLOT(onSocketState(QAbstractSocket::SocketState)));
-	
-	m_Socket->connectToHost(host, port);
+    QObject::connect(m_Socket, SIGNAL(readyRead()), this, SLOT(onDataReady()));
+    QObject::connect(m_Socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(onSocketError(QAbstractSocket::SocketError)));
+    QObject::connect(m_Socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)), this, SLOT(onSocketState(QAbstractSocket::SocketState)));
+
+    m_Socket->connectToHost(host, port);
 }
 
 void NetworkManager::performLogin(const QString &username, const QString &password) {
@@ -86,7 +102,16 @@ void NetworkManager::sendAddFriend(const QString &username) {
 }
 
 void NetworkManager::onConnected() {
-	emit connected();
+    // send the identification packet
+    Packet p;
+    if (m_Mode==User)
+	  p.addByte(PROT_CLUSER);
+    else
+	  p.addByte(PROT_CLREGISTER);
+
+    p.write(m_Socket);
+
+    emit connected();
 }
 
 void NetworkManager::onDisconnected() {
@@ -97,14 +122,17 @@ void NetworkManager::onSocketError(QAbstractSocket::SocketError error) {
 	switch(error) {
 		case QAbstractSocket::HostNotFoundError: {
 			emit message("Error: unable to find host", false);
+			emit networkError(HostNotFound);
 		} break;
 		
 		case QAbstractSocket::ConnectionRefusedError: {
 			emit message("Error: connection refused", false);
+			emit networkError(ConnectionRefused);
 		} break;
 		
 		default: {
-			emit message(QString("Error code: %1").arg(error), true);
+			emit message(QString("Error code: %1").arg(error), false);
+			emit networkError(UnknownError);
 		} break;
 	}
 }
@@ -147,6 +175,9 @@ void NetworkManager::handlePacket(Packet &p) {
 	switch(header) {
 		// server requires authentication
 		case PROT_REQAUTH: emit authenticate(); break;
+
+		// server replied with results of registration
+		case PROT_REGISTERACC: serverSentRegistrationResult(p); break;
 		
 		// message from the server
 		case PROT_SERVERMESSAGE: emit message(p.string(), false); break;
@@ -162,6 +193,12 @@ void NetworkManager::handlePacket(Packet &p) {
 		
 		default: qDebug() << "Unknown header: " << header; break;
 	}
+}
+
+void NetworkManager::serverSentRegistrationResult(Packet &p) {
+    // determine if it succeeded or not
+    int code=(int) p.byte();
+    emit registrationResult(code);
 }
 
 void NetworkManager::serverSentFriendList(Packet &p) {

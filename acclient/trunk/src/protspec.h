@@ -22,6 +22,10 @@
 #ifndef PROTSPEC_H
 #define PROTSPEC_H
 
+// client identification
+#define PROT_CLUSER		  0xFF
+#define PROT_CLREGISTER		  0xFE
+
 // login and logout
 #define PROT_LOGIN		  0x01
 #define PROT_LOGOUT		  0x02
@@ -39,5 +43,8 @@
 
 // peer to peer communication
 #define PROT_TEXTMESSAGE	  0x40
+
+// registration
+#define PROT_REGISTERACC	  0x70
 
 #endif
