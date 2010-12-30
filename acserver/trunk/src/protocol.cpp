@@ -29,6 +29,60 @@ Protocol::Protocol(Socket fd) {
 	m_Socket=fd;
 }
 
+void Protocol::createUserAccount() {
+	Packet p;
+	if (p.read(m_Socket)!=Packet::Disconnected) {
+		// we're expecting registration details ONLY
+		uint8_t header=p.byte();
+		if (header==PROT_REGISTERACC) {
+			uint8_t resultCode;
+
+			// extract details
+			std::string firstName=p.string();
+			std::string lastName=p.string();
+			std::string location=p.string();
+			std::string username=p.string();
+			std::string password=p.string();
+
+			p.clear();
+
+			// check if this username is free
+			Database *db=Database::getHandle();
+			if (db->open()) {
+				std::string sql="SELECT * FROM users WHERE username='";
+				sql+=username;
+				sql+="'";
+				Database::QueryResult res=db->query(sql);
+
+				// success! create the account
+				if (res.rowCount()==0) {
+					resultCode=0x0;
+
+					sql="INSERT INTO users VALUES(NULL,'";
+					sql+=username;
+					sql+="','";
+					sql+=password;
+					sql+="')";
+
+					db->query(sql);
+				}
+
+				// otherwise the username is taken
+				else
+					resultCode=0x1;
+			}
+
+			db->close();
+			delete db;
+
+			// let the client know the results
+			p.addByte(PROT_REGISTERACC);
+			p.addByte(resultCode);
+			p.write(m_Socket);
+		}
+	}
+}
+
 bool Protocol::authenticate(std::string &username, std::string &password) {
 	Packet a, p;
 	
