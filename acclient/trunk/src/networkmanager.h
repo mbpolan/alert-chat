@@ -31,8 +31,16 @@
 class NetworkManager : public QObject {
     Q_OBJECT
     public:
-		explicit NetworkManager(QObject *parent=NULL);
+		enum NetworkError { HostNotFound=0, ConnectionRefused, UnknownError };
+
+		enum ClientMode { User=0, Register };
+		enum RegistrationCode { NoError=0, UsernameTaken=1 };
+
+		explicit NetworkManager(const ClientMode &mode, QObject *parent=NULL);
 		~NetworkManager();
+
+		void createAccount(const QString &firstName, const QString &lastName, const QString &location,
+					 const QString &username, const QString &password);
 
 		void connect(const QString &host, int port);
 		void performLogin(const QString &username, const QString &password);
@@ -45,8 +53,10 @@ class NetworkManager : public QObject {
 	
     signals:
 		void authenticate();
+		void registrationResult(int);
 		void connected();
 		void disconnected();
+		void networkError(int);
 		void message(QString, bool);
 		void updateFriendList(QList<QString>);
 		void updateUserStatus(QString, int);
@@ -61,10 +71,12 @@ class NetworkManager : public QObject {
 
     private:
 		void handlePacket(Packet &p);
+		void serverSentRegistrationResult(Packet &p);
 		void serverSentFriendList(Packet &p);
 		void serverSentUserStatusUpdate(Packet &p);
 		void serverSentTextMessage(Packet &p);
 		
+		ClientMode m_Mode;
 		QTcpSocket *m_Socket;
 };
 

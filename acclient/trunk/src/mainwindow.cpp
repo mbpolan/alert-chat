@@ -27,6 +27,7 @@
 #include "logindialog.h"
 #include "mainwindow.h"
 #include "preferencesdialog.h"
+#include "registerdialog.h"
 #include "ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -42,29 +43,36 @@ MainWindow::MainWindow(QWidget *parent) :
 
      // connect actions
     connect(ui->actionAbout, SIGNAL(triggered()), this, SLOT(onAbout()));
+    connect(ui->actionNew_Account, SIGNAL(triggered()), this, SLOT(onNewAccount()));
     connect(ui->actionConnect, SIGNAL(triggered()), this, SLOT(onConnect()));
     connect(ui->actionDisconnect, SIGNAL(triggered()), this, SLOT(onDisconnect()));
     connect(ui->actionPreferences, SIGNAL(triggered()), this, SLOT(onPreferences()));
     connect(ui->actionAdd_By_Name, SIGNAL(triggered()), this, SLOT(onAddFriend()));
     connect(ui->actionQuit, SIGNAL(triggered()), this, SLOT(onQuit()));
 		
-	// allocate the network manager
-	m_Network=new NetworkManager(this);
-	connect(m_Network, SIGNAL(authenticate()), this, SLOT(onNetAuth()));
-	connect(m_Network, SIGNAL(connected()), this, SLOT(onNetConnected()));
-	connect(m_Network, SIGNAL(disconnected()), this, SLOT(onNetDisconnected()));
-	connect(m_Network, SIGNAL(message(QString,bool)), this, SLOT(onNetMessage(QString,bool)));
-	connect(m_Network, SIGNAL(updateFriendList(QList<QString>)), this, SLOT(onNetUpdateFriendList(QList<QString>)));
-	connect(m_Network, SIGNAL(updateUserStatus(QString,int)), this, SLOT(onNetUpdateUserStatus(QString,int)));
-	connect(m_Network, SIGNAL(textMessage(QString,QString)), this, SLOT(onNetTextMessage(QString,QString)));
+    // allocate the network manager
+    m_Network=new NetworkManager(NetworkManager::User, this);
+    connect(m_Network, SIGNAL(authenticate()), this, SLOT(onNetAuth()));
+    connect(m_Network, SIGNAL(connected()), this, SLOT(onNetConnected()));
+    connect(m_Network, SIGNAL(disconnected()), this, SLOT(onNetDisconnected()));
+    connect(m_Network, SIGNAL(message(QString,bool)), this, SLOT(onNetMessage(QString,bool)));
+    connect(m_Network, SIGNAL(updateFriendList(QList<QString>)), this, SLOT(onNetUpdateFriendList(QList<QString>)));
+    connect(m_Network, SIGNAL(updateUserStatus(QString,int)), this, SLOT(onNetUpdateUserStatus(QString,int)));
+    connect(m_Network, SIGNAL(textMessage(QString,QString)), this, SLOT(onNetTextMessage(QString,QString)));
 
-	// connect treeview actions
-	connect(ui->friendView, SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),
-		  this, SLOT(onFriendNameClicked(QTreeWidgetItem*,int)));
+    // connect treeview actions
+    connect(ui->friendView, SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),
+		this, SLOT(onFriendNameClicked(QTreeWidgetItem*,int)));
 }
 
 MainWindow::~MainWindow() {
     delete ui;
+}
+
+void MainWindow::onNewAccount() {
+    RegisterDialog rd(m_Config->valueForKey("server"),
+			    m_Config->valueForKey("port").toInt(), this);
+    rd.exec();
 }
 
 void MainWindow::onConnect() {

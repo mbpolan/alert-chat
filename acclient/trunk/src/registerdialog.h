@@ -17,60 +17,40 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-// mainwindow.h: definition of the MainWindow class
+// registerdialog.h: definition of the RegisterDialog class
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef REGISTERDIALOG_H
+#define REGISTERDIALOG_H
 
-#include <QList>
-#include <QMainWindow>
-#include <QTreeWidgetItem>
+#include <QDialog>
 
-#include "configloader.h"
 #include "networkmanager.h"
 
 namespace Ui {
-    class MainWindow;
+    class RegisterDialog;
 }
 
-class MainWindow: public QMainWindow {
+class RegisterDialog: public QDialog {
     Q_OBJECT
 
     public:
-		explicit MainWindow(QWidget *parent = 0);
-		~MainWindow();
+	  explicit RegisterDialog(const QString &host, int port, QWidget *parent=NULL);
 
-    private slots:
-		void onNewAccount();
-		void onConnect();
-		void onDisconnect();
+    public slots:
+	  void onNetError(int code);
+	  void onNetConnected();
+	  void onNetRegistrationResults(int code);
 
-		void onPreferences();
-
-		void onAddFriend();
-
-		void onFriendNameClicked(QTreeWidgetItem*, int);
-
-		void onNetAuth();
-		void onNetConnected();
-		void onNetDisconnected();
-		void onNetMessage(QString, bool);
-		void onNetUpdateFriendList(QList<QString>);
-		void onNetUpdateUserStatus(QString, int);
-		void onNetTextMessage(QString, QString);
-
-		void onQuit();
-		void onAbout();
+    protected:
+	  virtual void accept();
 
     private:
-		void resetTreeView();
+	  QString m_Host;
+	  int m_Port;
 
-		ConfigLoader *m_Config;
+	  Ui::RegisterDialog *ui;
 
-		NetworkManager *m_Network;
-		QString m_User;
-		
-		Ui::MainWindow *ui;
+	  NetworkManager *m_Network;
 };
 
-#endif // MAINWINDOW_H
+#endif

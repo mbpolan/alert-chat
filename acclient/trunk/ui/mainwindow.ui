@@ -39,6 +39,8 @@
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="actionNew_Account"/>
+    <addaction name="separator"/>
     <addaction name="actionConnect"/>
     <addaction name="actionDisconnect"/>
     <addaction name="separator"/>
@@ -99,6 +101,11 @@
   <action name="actionPreferences">
    <property name="text">
     <string>Preferences</string>
+   </property>
+  </action>
+  <action name="actionNew_Account">
+   <property name="text">
+    <string>New Account</string>
    </property>
   </action>
  </widget>
