@@ -52,6 +52,14 @@ class Protocol {
 		Protocol(Socket fd);
 
 		/**
+		 * Attempts to create a new account with the given details.
+		 * If the account cannot be created, either because of a database error,
+		 * a conflict of existing user data, etc., the protocol will then inform the
+		 * client of the problem.
+		 */
+		void createUserAccount();
+
+		/**
 		 * Sets the user for whom this protocol is responsible for.
 		 *
 		 * @param user The user who owns this protocol.

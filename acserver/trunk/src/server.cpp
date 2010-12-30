@@ -43,58 +43,74 @@ void* connectionHandler(void *param) {
 	Socket fd=*(Socket*) param;
 	Protocol p(fd);
 	
-	// attempt to authenticate the user first
-	std::string username, password;
-	if (!p.authenticate(username, password)) {
-		// send error message
-		Packet ret;
-		ret.addByte(PROT_SERVERMESSAGE);
-		ret.addString("Incorrect username or password.");
+	// see what the client identifies itself by
+	Packet id;
+	id.read(fd);
+
+	// identifying byte
+	uint8_t ident=id.byte();
+
+	// regular user connection
+	if (ident==PROT_CLUSER) {
+		// attempt to authenticate the user first
+		std::string username, password;
+		if (!p.authenticate(username, password)) {
+			// send error message
+			Packet ret;
+			ret.addByte(PROT_SERVERMESSAGE);
+			ret.addString("Incorrect username or password.");
+
+			ret.write(fd);
+		}
 		
-		ret.write(fd);
+		else {
+			// allocate a user object for this user
+			User *user=new User(username, password);
+			user->setProtocol(&p);
+			p.setUser(user);
+
+			// get this user's friend list
+			Database *db=Database::getHandle();
+			if (db->open()) {
+				StringList friends=db->getFriendList(username);
+				db->close();
+
+				user->setFriendList(friends);
+				user->sendFriendList();
+			}
+			delete db;
+
+			// have the receive call timeout after a given time
+			struct timeval tv;
+			int rto=g_ConfigManager->valueForKey("internal_recvtimeout").toInt();
+			tv.tv_sec=rto/1000;
+			tv.tv_usec=(rto%1000)*1000;
+
+			if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (char*) &tv, sizeof(tv))==-1) {
+				std::cout << "Unable to call setsockopt for client " << fd << std::endl;
+				closeSocket(fd);
+
+				exitThread();
+			}
+
+			UserManager::defaultManager()->addUser(user);
+
+			// begin communications relay
+			p.relay();
+
+			UserManager::defaultManager()->removeUser(user);
+
+			delete user;
+		}
 	}
 	
-	else {
-		// allocate a user object for this user
-		User *user=new User(username, password);
-		user->setProtocol(&p);
-		p.setUser(user);
+	// registration from client
+	else if (ident==PROT_CLREGISTER)
+		p.createUserAccount();
 
-		// get this user's friend list
-		Database *db=Database::getHandle();
-		if (db->open()) {
-			StringList friends=db->getFriendList(username);
-			db->close();
+	else
+		std::cout << "Unknown identification packet: " << (unsigned short) ident << std::endl;
 
-			user->setFriendList(friends);
-
-			user->sendFriendList();
-		}
-		delete db;
-
-		// have the receive call timeout after a given time
-		struct timeval tv;
-		int rto=g_ConfigManager->valueForKey("internal_recvtimeout").toInt();
-		tv.tv_sec=rto/1000;
-		tv.tv_usec=(rto%1000)*1000;
-
-		if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (char*) &tv, sizeof(tv))==-1) {
-			std::cout << "Unable to call setsockopt for client " << fd << std::endl;
-			close(fd);
-
-			pthread_exit(NULL);
-		}
-
-		UserManager::defaultManager()->addUser(user);
-
-		// begin communications relay
-		p.relay();
-
-		UserManager::defaultManager()->removeUser(user);
-
-		delete user;
-	}
-	
 	// close the socket if still necessary
 	if (fd>0)
 		closeSocket(fd);
