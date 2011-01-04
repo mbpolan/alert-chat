@@ -48,6 +48,7 @@ class MainWindow: public QMainWindow {
 		void onPreferences();
 
 		void onAddFriend();
+		void onRemoveFriend();
 
 		void onFriendNameClicked(QTreeWidgetItem*, int);
 

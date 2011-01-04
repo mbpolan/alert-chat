@@ -57,6 +57,7 @@
      <string>Friends</string>
     </property>
     <addaction name="actionAdd_By_Name"/>
+    <addaction name="actionRemove"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -106,6 +107,17 @@
   <action name="actionNew_Account">
    <property name="text">
     <string>New Account</string>
+   </property>
+  </action>
+  <action name="actionRemove">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Remove</string>
    </property>
   </action>
  </widget>
