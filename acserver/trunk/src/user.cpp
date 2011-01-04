@@ -19,6 +19,7 @@
  ***************************************************************************/
 // user.cpp: implementation of User class
 
+#include "database.h"
 #include "user.h"
 
 User::User(const std::string &username, const std::string &password) {
@@ -52,4 +53,45 @@ void User::sendUserStatusUpdate(const std::string &user, bool online) {
 
 void User::addFriend(const std::string &userName) {
 	m_FriendList.push_back(userName);
+}
+
+void User::removeFriend(const std::string &username) {
+	for (StringList::iterator it=m_FriendList.begin(); it!=m_FriendList.end(); ++it) {
+		if ((*it)==username) {
+			it=m_FriendList.erase(it);
+			break;
+		}
+	}
+
+	// now remove this user from the database
+	Database *db=Database::getHandle();
+	if (db->open()) {
+		// resolve this user's id
+		std::string query="SELECT * FROM users WHERE username='";
+		query+=m_Username;
+		query+="'";
+		Database::QueryResult res=db->query(query);
+
+		std::string thisUser=res.rowAt(0)[0];
+
+		// now resolve the other user's id
+		query="SELECT * FROM users WHERE username='";
+		query+=username;
+		query+="'";
+		res=db->query(query);
+
+		std::string toRemove=res.rowAt(0)[0];
+
+		// finally remove this user from the user's friendlist
+		query="DELETE FROM friendlists WHERE user=";
+		query+=thisUser;
+		query+=" AND friend=";
+		query+=toRemove;
+		db->query(query);
+
+		db->close();
+	}
+
+	delete db;
+
 }

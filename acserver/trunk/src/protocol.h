@@ -109,6 +109,11 @@ class Protocol {
 		void clientSentTextMessage(Packet &p);
 
 		/**
+		 * Handler for when a client has sent a request to remove a friend.
+		 */
+		void clientSentRemoveFriend(Packet &p);
+
+		/**
 		 * Flushes the outgoing packet buffer.
 		 */
 		void sendQueuedPackets();
