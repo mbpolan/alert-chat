@@ -101,6 +101,15 @@ void NetworkManager::sendAddFriend(const QString &username) {
     p.write(m_Socket);
 }
 
+void NetworkManager::sendRemoveFriend(const QString &username) {
+    Packet p;
+
+    p.addByte(PROT_REMOVEFRIEND);
+    p.addString(username);
+
+    p.write(m_Socket);
+}
+
 void NetworkManager::onConnected() {
     // send the identification packet
     Packet p;

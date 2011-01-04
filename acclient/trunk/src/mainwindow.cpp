@@ -48,6 +48,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionDisconnect, SIGNAL(triggered()), this, SLOT(onDisconnect()));
     connect(ui->actionPreferences, SIGNAL(triggered()), this, SLOT(onPreferences()));
     connect(ui->actionAdd_By_Name, SIGNAL(triggered()), this, SLOT(onAddFriend()));
+    connect(ui->actionRemove, SIGNAL(triggered()), this, SLOT(onRemoveFriend()));
     connect(ui->actionQuit, SIGNAL(triggered()), this, SLOT(onQuit()));
 		
     // allocate the network manager
@@ -103,6 +104,21 @@ void MainWindow::onAddFriend() {
 
     if (ok && !username.isEmpty())
 	  m_Network->sendAddFriend(username);
+}
+
+void MainWindow::onRemoveFriend() {
+    if (ui->friendView->currentItem() &&
+	  ui->friendView->currentItem()->parent()) {
+	  // grab the currently selected item, the username it holds, and delete it
+	  QTreeWidgetItem *item=ui->friendView->currentItem();
+	  QString username=item->text(0);
+
+	  item->parent()->removeChild(item);
+	  delete item;
+
+	  // tell the server to remove this username from the client's friendlist
+	  m_Network->sendRemoveFriend(username);
+    }
 }
 
 void MainWindow::onFriendNameClicked(QTreeWidgetItem *item, int) {

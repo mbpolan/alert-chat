@@ -50,6 +50,7 @@ class NetworkManager : public QObject {
 
 		void sendTextMessage(const QString &toWhom, const QString &text);
 		void sendAddFriend(const QString &username);
+		void sendRemoveFriend(const QString &username);
 	
     signals:
 		void authenticate();
