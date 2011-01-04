@@ -51,7 +51,8 @@ typedef void* (*ThreadFunc)(void*);
 
 // global array of mutexes and defines
 #define MUTEX_USERMANAGER	0
-#define TOTAL_MUTEXES		1
+#define MUTEX_LOGWRITER		1
+#define TOTAL_MUTEXES		2
 
 /// Global array of mutexes.
 static mutex_t g_Mutexes[TOTAL_MUTEXES];
