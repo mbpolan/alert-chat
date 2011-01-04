@@ -40,6 +40,7 @@
 #define PROT_FRIENDLIST				0x25
 #define PROT_STATUSUPDATE			0x26
 #define PROT_ADDFRIEND				0x27
+#define PROT_REMOVEFRIEND			0x28
 
 // peer to peer communication
 #define PROT_TEXTMESSAGE			0x40

@@ -19,7 +19,10 @@
  ***************************************************************************/
 // protocol.cpp: implementation of Protocol class
 
+#include <sstream>
+
 #include "dbsqlite3.h"
+#include "logwriter.h"
 #include "usermanager.h"
 #include "packet.h"
 #include "protocol.h"
@@ -101,7 +104,7 @@ bool Protocol::authenticate(std::string &username, std::string &password) {
 			
 			Database *db=Database::getHandle();
 			if (!db->open()) {
-				std::cerr << "Protocol: unable to open database: " << db->lastError() << std::endl;
+				LogWriter::output("Protocol: unable to open database: "+db->lastError(), LogWriter::Error);
 				delete db;
 			}
 			
@@ -115,8 +118,10 @@ bool Protocol::authenticate(std::string &username, std::string &password) {
 				// query the database and see if the user's credentials were valid
 				Database::QueryResult res=db->query(sql);
 				if (res.error()) {
-					std::cerr << "Protocol: unable to query database for user " << username << ": ";
-					std::cerr << db->lastError() << std::endl;
+					std::string out="Protocol: unable to query database for user "+username;
+					out+=": "+db->lastError();
+
+					LogWriter::output(out, LogWriter::Error);
 					db->close();
 					
 					return false;
@@ -157,9 +162,15 @@ void Protocol::handlePacket(Packet &p) {
 	switch(header) {
 		case PROT_ADDFRIEND: clientSentAddFriend(p); break;
 
+		case PROT_REMOVEFRIEND: clientSentRemoveFriend(p); break;
+
 		case PROT_TEXTMESSAGE: clientSentTextMessage(p); break;
 
-		default: std::cerr << "Protocol: unknown client packet header: " << std::ios_base::hex << header << std::endl; break;
+		default: {
+			std::stringstream ss;
+			ss << "Protocol: unknown client packet header " << std::ios_base::hex << header;
+			LogWriter::output(ss.str(), LogWriter::Error);
+		} break;
 	}
 }
 
@@ -178,6 +189,11 @@ void Protocol::clientSentTextMessage(Packet &p) {
 	std::string message=p.string();
 
 	UserManager::defaultManager()->deliverTextMessageTo(m_User->username(), recipient, message);
+}
+
+void Protocol::clientSentRemoveFriend(Packet &p) {
+	std::string username=p.string();
+	m_User->removeFriend(username);
 }
 
 void Protocol::sendQueuedPackets() {

@@ -98,9 +98,17 @@ class User {
 		 * Adds a friend to this user's friend list.
 		 * This will cause an update to the database.
 		 *
-		 * @param userName The username of another user to add.
+		 * @param username The username of another user to add.
 		 */
-		void addFriend(const std::string &userName);
+		void addFriend(const std::string &username);
+
+		/**
+		 * Removes the given username from this user's friend list.
+		 * This will cause an update to the database.
+		 *
+		 * @param username The username of another user to remove.
+		 */
+		void removeFriend(const std::string &username);
 
 		/**
 		 * Sets the friend list for this user.
