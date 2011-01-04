@@ -4,6 +4,7 @@ acserver_SOURCES = configmanager.cpp configmanager.h \
 		   database.cpp database.h \
 		   dbsqlite3.cpp dbsqlite3.h \
 		   definitions.h \
+		   logwriter.cpp logwriter.h \
 		   packet.cpp packet.h \
 		   protocol.cpp protocol.h \
 		   protspec.h \

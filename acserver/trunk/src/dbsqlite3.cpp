@@ -22,6 +22,7 @@
 #include <sstream>
 
 #include "dbsqlite3.h"
+#include "logwriter.h"
 
 DatabaseSQLite3::DatabaseSQLite3(const std::string &file) {
 	m_File=file;
@@ -90,8 +91,10 @@ StringList DatabaseSQLite3::getFriendList(const std::string &username) {
 	// first get the user's id
 	QueryResult res=query(ss.str());
 	if (res.error()) {
-		std::cerr << "DatabaseSQLite3: Error while resolving user id for friendlist for user " << username
-				  << ": " << res.errorMessage() << std::endl;
+		std::string out="DatabaseSQLite3: Error while resolving user id for friendlist for user ";
+		out+=username+": "+res.errorMessage();
+
+		LogWriter::output(out, LogWriter::Error);
 		return friends;
 	}
 
@@ -102,7 +105,10 @@ StringList DatabaseSQLite3::getFriendList(const std::string &username) {
 
 	res=query(ss.str());
 	if (res.error()) {
-		std::cerr << "DatabaseSQLite3: Error while getting friendlist for user " << username << ": " << res.errorMessage() << std::endl;
+		std::string out="DatabaseSQLite3: Error while getting friendlist for user ";
+		out+=username+": "+res.errorMessage();
+
+		LogWriter::output(out, LogWriter::Error);
 		return friends;
 	}
 

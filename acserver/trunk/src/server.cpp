@@ -22,12 +22,14 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <sstream>
 #include <sys/socket.h>
 #include <sys/time.h>
 
 #include "configmanager.h"
 #include "definitions.h"
 #include "dbsqlite3.h"
+#include "logwriter.h"
 #include "packet.h"
 #include "protocol.h"
 #include "protspec.h"
@@ -87,7 +89,7 @@ void* connectionHandler(void *param) {
 			tv.tv_usec=(rto%1000)*1000;
 
 			if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (char*) &tv, sizeof(tv))==-1) {
-				std::cout << "Unable to call setsockopt for client " << fd << std::endl;
+				LogWriter::output("Unable to call setsockopt", LogWriter::Error);
 				closeSocket(fd);
 
 				exitThread();
@@ -108,14 +110,17 @@ void* connectionHandler(void *param) {
 	else if (ident==PROT_CLREGISTER)
 		p.createUserAccount();
 
-	else
-		std::cout << "Unknown identification packet: " << (unsigned short) ident << std::endl;
+	else {
+		std::stringstream ss;
+		ss << "Unknown identification packet: " << (unsigned short) ident;
+		LogWriter::output(ss.str(), LogWriter::Error);
+	}
 
 	// close the socket if still necessary
 	if (fd>0)
 		closeSocket(fd);
 	
-	std::cout << "Disconnected\n";
+	LogWriter::output("Disconnected user", LogWriter::Access);
 	exitThread();
 }
 
@@ -145,6 +150,18 @@ int main(int argc, char *argv[]) {
 
 	ConfigManager::setDefaultManager(g_ConfigManager);
 
+	// determine which logs to enable
+	int logs=0;
+	if (g_ConfigManager->valueForKey("enable-access-log").toInt())
+		logs |= LogWriter::Access;
+	if (g_ConfigManager->valueForKey("enable-error-log").toInt())
+		logs |= LogWriter::Error;
+	if (g_ConfigManager->valueForKey("enable-master-log").toInt())
+		logs |= LogWriter::Master;
+
+	// now initialize the logging subsystem
+	LogWriter::initialize(logs);
+
 	// setup a server socket for incoming connections
 	ServerSocket sock;
 	try {
@@ -158,7 +175,7 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 	
-	std::cout << "Alert Chat server " << VERSION << " running...\n";
+	LogWriter::output("Alert Chat server running... ", LogWriter::Master);
 	
 	// so far so good; create a thread pool for new connections
 	ThreadPool pool;
@@ -173,15 +190,19 @@ int main(int argc, char *argv[]) {
 		// see if this socket is valid
 		Socket fd=sock.accept(ip);
 		if (fd>=0) {
-			if (pool.createThread(connectionHandler, &fd)!=ThreadPool::NoError)
-				std::cout << "Rejecting connection from " << ip << " (" << pool.lastError() << ")\n";
+			if (pool.createThread(connectionHandler, &fd)!=ThreadPool::NoError) {
+				std::stringstream ss;
+				ss << "Rejecting connection from " << ip << " (" << pool.lastError() << ")";
+				LogWriter::output(ss.str(), LogWriter::Access);
+			}
+
 			else
-				std::cout << "Accepted connection from " << ip << std::endl;
+				LogWriter::output(std::string("Accepted connection from ")+ip, LogWriter::Access);
 			
 		}
 	}
 	
-	std::cout << "Alert Chat server shutting down...\n";
+	LogWriter::output("Alert Chat server shutting down...", LogWriter::Master);
 	
 	// disconnect all users
 	g_UserManager->kickAll();
