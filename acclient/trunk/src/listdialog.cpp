@@ -17,75 +17,28 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-// mainwindow.h: definition of the MainWindow class
+// listdialog.cpp: implementations of ListDialog class
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#include <QListWidget>
 
-#include <QList>
-#include <QMainWindow>
-#include <QSystemTrayIcon>
-#include <QTreeWidgetItem>
+#include "listdialog.h"
+#include "ui_listdialog.h"
 
-#include "configloader.h"
-#include "historystore.h"
-#include "networkmanager.h"
+ListDialog::ListDialog(const QStringList &usernames, QWidget *parent):
+	  QDialog(parent), ui(new Ui::ListDialog) {
+    ui->setupUi(this);
 
-namespace Ui {
-    class MainWindow;
+    // append all usernames into the list
+    for (int i=0; i<usernames.size(); i++) {
+	  QString entry=usernames.at(i);
+	  QListWidgetItem *item=new QListWidgetItem(entry, ui->userList);
+    }
 }
 
-class MainWindow: public QMainWindow {
-    Q_OBJECT
+QString ListDialog::selectedUsername() const {
+    QListWidgetItem *item=ui->userList->currentItem();
+    if (item)
+	  return item->text();
 
-    public:
-		explicit MainWindow(QWidget *parent = 0);
-		~MainWindow();
-
-    private slots:
-		void onTrayIconActivated(QSystemTrayIcon::ActivationReason);
-
-		void onNewAccount();
-		void onConnect();
-		void onDisconnect();
-
-		void onPreferences();
-
-		void onAddFriend();
-		void onRemoveFriend();
-		void onViewHistory();
-
-		void onFriendNameClicked(QTreeWidgetItem*, int);
-
-		void onNetAuth();
-		void onNetConnected();
-		void onNetDisconnected();
-		void onNetMessage(QString, bool);
-		void onNetUpdateFriendList(QList<QString>);
-		void onNetUpdateUserStatus(QString, int);
-		void onNetTextMessage(QString, QString);
-
-		void onQuit();
-		void onAbout();
-
-    private:
-		void closeEvent(QCloseEvent *);
-
-		void resetTreeView();
-
-		// chat history manager
-		HistoryStore *m_HistStore;
-
-		// configuration loader
-		ConfigLoader *m_Config;
-
-		// network manager and data
-		NetworkManager *m_Network;
-		QString m_User;
-
-		QSystemTrayIcon *m_Icon;
-		
-		Ui::MainWindow *ui;
-};
-
-#endif
+    return "";
+}

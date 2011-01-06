@@ -58,6 +58,8 @@
     </property>
     <addaction name="actionAdd_By_Name"/>
     <addaction name="actionRemove"/>
+    <addaction name="separator"/>
+    <addaction name="actionView_History"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -118,6 +120,11 @@
    </property>
    <property name="text">
     <string>Remove</string>
+   </property>
+  </action>
+  <action name="actionView_History">
+   <property name="text">
+    <string>View History</string>
    </property>
   </action>
  </widget>
