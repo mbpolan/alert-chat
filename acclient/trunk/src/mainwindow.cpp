@@ -19,8 +19,10 @@
  ***************************************************************************/
 // mainwindow.cpp: implementation of MainWindow class
 
+#include <QCloseEvent>
 #include <QDir>
 #include <QDesktopServices>
+#include <QIcon>
 #include <QInputDialog>
 #include <QMessageBox>
 
@@ -64,10 +66,22 @@ MainWindow::MainWindow(QWidget *parent) :
     // connect treeview actions
     connect(ui->friendView, SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),
 		this, SLOT(onFriendNameClicked(QTreeWidgetItem*,int)));
+
+    // create the tray icon
+    m_Icon=new QSystemTrayIcon(QIcon(":/icons/icon16.png"), this);
+    m_Icon->show();
+
+    connect(m_Icon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
+		this, SLOT(onTrayIconActivated(QSystemTrayIcon::ActivationReason)));
 }
 
 MainWindow::~MainWindow() {
     delete ui;
+}
+
+void MainWindow::onTrayIconActivated(QSystemTrayIcon::ActivationReason reason) {
+    if (reason==QSystemTrayIcon::Trigger)
+	  show();
 }
 
 void MainWindow::onNewAccount() {
@@ -210,6 +224,11 @@ void MainWindow::onQuit() {
 
 void MainWindow::onAbout() {
 
+}
+
+void MainWindow::closeEvent(QCloseEvent *e) {
+    hide();
+    e->ignore();
 }
 
 void MainWindow::resetTreeView() {

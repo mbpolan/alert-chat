@@ -26,3 +26,6 @@ SOURCES += src/client.cpp \
     src/preferencesdialog.cpp \
     src/configloader.cpp \
     src/registerdialog.cpp
+
+RESOURCES += \
+    resources.qrc
