@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file alias="icon16.png">gfx/icon16.png</file>
+    </qresource>
+</RCC>

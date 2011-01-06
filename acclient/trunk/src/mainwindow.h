@@ -24,6 +24,7 @@
 
 #include <QList>
 #include <QMainWindow>
+#include <QSystemTrayIcon>
 #include <QTreeWidgetItem>
 
 #include "configloader.h"
@@ -41,6 +42,8 @@ class MainWindow: public QMainWindow {
 		~MainWindow();
 
     private slots:
+		void onTrayIconActivated(QSystemTrayIcon::ActivationReason);
+
 		void onNewAccount();
 		void onConnect();
 		void onDisconnect();
@@ -64,12 +67,16 @@ class MainWindow: public QMainWindow {
 		void onAbout();
 
     private:
+		void closeEvent(QCloseEvent *);
+
 		void resetTreeView();
 
 		ConfigLoader *m_Config;
 
 		NetworkManager *m_Network;
 		QString m_User;
+
+		QSystemTrayIcon *m_Icon;
 		
 		Ui::MainWindow *ui;
 };
