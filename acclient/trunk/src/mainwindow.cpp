@@ -71,8 +71,16 @@ MainWindow::MainWindow(QWidget *parent) :
     m_Icon=new QSystemTrayIcon(QIcon(":/icons/icon16.png"), this);
     m_Icon->show();
 
+    QMenu *trayMenu=new QMenu;
+    QAction *quit=new QAction(tr("Quit"), trayMenu);
+
+    trayMenu->addAction(quit);
+    m_Icon->setContextMenu(trayMenu);
+
+    // connect tray icon signals
     connect(m_Icon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
 		this, SLOT(onTrayIconActivated(QSystemTrayIcon::ActivationReason)));
+    connect(quit, SIGNAL(triggered()), qApp, SLOT(quit()));
 }
 
 MainWindow::~MainWindow() {
