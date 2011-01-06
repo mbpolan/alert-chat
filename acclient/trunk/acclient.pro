@@ -14,10 +14,15 @@ MOC_DIR = moc
 HEADERS += src/logindialog.h src/mainwindow.h src/networkmanager.h src/packet.h src/protspec.h \
     src/preferencesdialog.h \
     src/configloader.h \
-    src/registerdialog.h
+    src/registerdialog.h \
+    src/historystore.h \
+    src/listdialog.h \
+    src/historyviewer.h
 FORMS += ui/logindialog.ui ui/mainwindow.ui \
     ui/preferencesdialog.ui \
-    ui/registerdialog.ui
+    ui/registerdialog.ui \
+    ui/listdialog.ui \
+    ui/historyviewer.ui
 SOURCES += src/client.cpp \
            src/logindialog.cpp \
            src/mainwindow.cpp \
@@ -25,7 +30,10 @@ SOURCES += src/client.cpp \
 	   src/packet.cpp \
     src/preferencesdialog.cpp \
     src/configloader.cpp \
-    src/registerdialog.cpp
+    src/registerdialog.cpp \
+    src/historystore.cpp \
+    src/listdialog.cpp \
+    src/historyviewer.cpp
 
 RESOURCES += \
     resources.qrc

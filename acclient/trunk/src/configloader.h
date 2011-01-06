@@ -21,4 +21,4 @@ class ConfigLoader: public QObject {
 	  QMap<QString, QString> m_Keys;
 };
 
-#endif // CONFIGLOADER_H
+#endif

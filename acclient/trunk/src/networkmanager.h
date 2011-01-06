@@ -81,4 +81,4 @@ class NetworkManager : public QObject {
 		QTcpSocket *m_Socket;
 };
 
-#endif // NETWORKMANAGER_H
+#endif

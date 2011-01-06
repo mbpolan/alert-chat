@@ -20,12 +20,15 @@
 // mainwindow.cpp: implementation of MainWindow class
 
 #include <QCloseEvent>
+#include <QDateTime>
 #include <QDir>
 #include <QDesktopServices>
 #include <QIcon>
 #include <QInputDialog>
 #include <QMessageBox>
 
+#include "historyviewer.h"
+#include "listdialog.h"
 #include "logindialog.h"
 #include "mainwindow.h"
 #include "preferencesdialog.h"
@@ -51,6 +54,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionPreferences, SIGNAL(triggered()), this, SLOT(onPreferences()));
     connect(ui->actionAdd_By_Name, SIGNAL(triggered()), this, SLOT(onAddFriend()));
     connect(ui->actionRemove, SIGNAL(triggered()), this, SLOT(onRemoveFriend()));
+    connect(ui->actionView_History, SIGNAL(triggered()), this, SLOT(onViewHistory()));
     connect(ui->actionQuit, SIGNAL(triggered()), this, SLOT(onQuit()));
 		
     // allocate the network manager
@@ -81,6 +85,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_Icon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
 		this, SLOT(onTrayIconActivated(QSystemTrayIcon::ActivationReason)));
     connect(quit, SIGNAL(triggered()), qApp, SLOT(quit()));
+
+    // allocate history storage
+    m_HistStore=new HistoryStore(this);
 }
 
 MainWindow::~MainWindow() {
@@ -143,14 +150,41 @@ void MainWindow::onRemoveFriend() {
     }
 }
 
+void MainWindow::onViewHistory() {
+    // request all available history files
+    ListDialog ld(m_HistStore->savedHistories(), this);
+    if (ld.exec()==QDialog::Accepted) {
+	  QString username=ld.selectedUsername();
+
+	  // if the chosen username is valid, show the chat history for that user
+	  if (!username.isEmpty()) {
+		HistoryViewer hv(m_HistStore->userHistory(username), this);
+		hv.exec();
+	  }
+    }
+}
+
 void MainWindow::onFriendNameClicked(QTreeWidgetItem *item, int) {
     if (item && item->text(0)!="Online" && item->text(0)!="Offline") {
 	  // open a dialog window for this conversation
 	  bool ok;
 	  QString text=QInputDialog::getText(this, tr("Send Message"), tr("Message"), QLineEdit::Normal, QString(), &ok);
 
-	  if (ok && !text.isEmpty())
+	  if (ok && !text.isEmpty()) {
 		m_Network->sendTextMessage(item->text(0), text);
+
+		// also save this in the chat history, if so requested
+		if (m_Config->valueForKey("saveChatHistory").toInt()) {
+		    QString line="[";
+		    line+=QDateTime::currentDateTime().toString(Qt::ISODate);
+		    line+="] ";
+		    line+=m_User;
+		    line+=": ";
+		    line+=text;
+
+		    m_HistStore->appendTextMessage(item->text(0), line);
+		}
+	  }
     }
 }
 
@@ -178,7 +212,6 @@ void MainWindow::onNetDisconnected() {
 	resetTreeView();
 
 	setWindowTitle("Alert-Chat");
-
 }
 
 void MainWindow::onNetMessage(QString msg, bool passive) {
@@ -223,7 +256,29 @@ void MainWindow::onNetUpdateUserStatus(QString username, int status) {
 }
 
 void MainWindow::onNetTextMessage(QString sender, QString text) {
-    QMessageBox::information(this, QString("Message from: %1").arg(sender), text);
+    // see if this user is known, and if not, then see if the user wants a prompt beforehand
+    QList<QTreeWidgetItem*> items=ui->friendView->findItems(sender, Qt::MatchExactly | Qt::MatchRecursive);
+    if (items.empty() && m_Config->valueForKey("promptUnknown").toInt()==1) {
+	  if (QMessageBox::question(this, tr("Unknown User"),
+					    QString(tr("An unknown user (%1) has sent you a message. Accept?").arg(sender)),
+					    QMessageBox::Yes, QMessageBox::No)==QMessageBox::Yes)
+		QMessageBox::information(this, QString("Unknown user message: %1").arg(sender), text);
+    }
+
+    else
+	  QMessageBox::information(this, QString("Message from: %1").arg(sender), text);
+
+    // if chat history saving is enabled, save this message
+    if (m_Config->valueForKey("saveChatHistory").toInt()) {
+	  QString line="[";
+	  line+=QDateTime::currentDateTime().toString(Qt::ISODate);
+	  line+="] ";
+	  line+=sender;
+	  line+=": ";
+	  line+=text;
+
+	  m_HistStore->appendTextMessage(sender, line);
+    }
 }
 
 void MainWindow::onQuit() {

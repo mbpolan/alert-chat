@@ -17,75 +17,24 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-// mainwindow.h: definition of the MainWindow class
+// historyviewer.h: definitions of the HistoryViewer class
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef HISTORYVIEWER_H
+#define HISTORYVIEWER_H
 
-#include <QList>
-#include <QMainWindow>
-#include <QSystemTrayIcon>
-#include <QTreeWidgetItem>
-
-#include "configloader.h"
-#include "historystore.h"
-#include "networkmanager.h"
+#include <QDialog>
 
 namespace Ui {
-    class MainWindow;
+    class HistoryViewer;
 }
 
-class MainWindow: public QMainWindow {
+class HistoryViewer: public QDialog {
     Q_OBJECT
-
     public:
-		explicit MainWindow(QWidget *parent = 0);
-		~MainWindow();
-
-    private slots:
-		void onTrayIconActivated(QSystemTrayIcon::ActivationReason);
-
-		void onNewAccount();
-		void onConnect();
-		void onDisconnect();
-
-		void onPreferences();
-
-		void onAddFriend();
-		void onRemoveFriend();
-		void onViewHistory();
-
-		void onFriendNameClicked(QTreeWidgetItem*, int);
-
-		void onNetAuth();
-		void onNetConnected();
-		void onNetDisconnected();
-		void onNetMessage(QString, bool);
-		void onNetUpdateFriendList(QList<QString>);
-		void onNetUpdateUserStatus(QString, int);
-		void onNetTextMessage(QString, QString);
-
-		void onQuit();
-		void onAbout();
+	  explicit HistoryViewer(const QString &contents, QWidget *parent=NULL);
 
     private:
-		void closeEvent(QCloseEvent *);
-
-		void resetTreeView();
-
-		// chat history manager
-		HistoryStore *m_HistStore;
-
-		// configuration loader
-		ConfigLoader *m_Config;
-
-		// network manager and data
-		NetworkManager *m_Network;
-		QString m_User;
-
-		QSystemTrayIcon *m_Icon;
-		
-		Ui::MainWindow *ui;
+	  Ui::HistoryViewer *ui;
 };
 
 #endif

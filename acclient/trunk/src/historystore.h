@@ -17,75 +17,27 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-// mainwindow.h: definition of the MainWindow class
+// historystore.h: definition of the HistoryStore class
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef HISTORYSTORE_H
+#define HISTORYSTORE_H
 
 #include <QList>
-#include <QMainWindow>
-#include <QSystemTrayIcon>
-#include <QTreeWidgetItem>
+#include <QObject>
 
-#include "configloader.h"
-#include "historystore.h"
-#include "networkmanager.h"
-
-namespace Ui {
-    class MainWindow;
-}
-
-class MainWindow: public QMainWindow {
+class HistoryStore: public QObject {
     Q_OBJECT
-
     public:
-		explicit MainWindow(QWidget *parent = 0);
-		~MainWindow();
+	  HistoryStore(QObject *parent=NULL);
 
-    private slots:
-		void onTrayIconActivated(QSystemTrayIcon::ActivationReason);
+	  // adds a line of message to a user's saved history
+	  void appendTextMessage(const QString &username, const QString &line);
 
-		void onNewAccount();
-		void onConnect();
-		void onDisconnect();
+	  // returns a list of all saved user histories
+	  QList<QString> savedHistories();
 
-		void onPreferences();
-
-		void onAddFriend();
-		void onRemoveFriend();
-		void onViewHistory();
-
-		void onFriendNameClicked(QTreeWidgetItem*, int);
-
-		void onNetAuth();
-		void onNetConnected();
-		void onNetDisconnected();
-		void onNetMessage(QString, bool);
-		void onNetUpdateFriendList(QList<QString>);
-		void onNetUpdateUserStatus(QString, int);
-		void onNetTextMessage(QString, QString);
-
-		void onQuit();
-		void onAbout();
-
-    private:
-		void closeEvent(QCloseEvent *);
-
-		void resetTreeView();
-
-		// chat history manager
-		HistoryStore *m_HistStore;
-
-		// configuration loader
-		ConfigLoader *m_Config;
-
-		// network manager and data
-		NetworkManager *m_Network;
-		QString m_User;
-
-		QSystemTrayIcon *m_Icon;
-		
-		Ui::MainWindow *ui;
+	  // returns the chat history for a particular user
+	  QString userHistory(const QString &username);
 };
 
 #endif
