@@ -36,16 +36,36 @@ UserManager* UserManager::defaultManager() {
 	return g_UserManager;
 }
 
+bool UserManager::isUserOnline(const std::string &username) const {
+	lock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
+
+	// find out of the user is in the list of online clients
+	bool online=(m_Users.find(username)!=m_Users.end());
+
+	unlock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
+
+	return online;
+}
+
 void UserManager::addUser(User *user) {
 	lock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
 
 	broadcastUserStatus(user, User::Online);
 
+	// set the block status on all blocked users
+	StringList blocked=user->blockedUsers();
+	for (StringList::iterator it=blocked.begin(); it!=blocked.end(); ++it) {
+		std::cout << "wysylam status zablokowany... ";
+		user->sendUserStatusUpdate((*it), User::Blocked);
+		std::cout << "zakonczono\n";
+	}
+
 	// send an initial friend list status update as well
 	StringList friends=user->friends();
 	for (StringList::iterator it=friends.begin(); it!=friends.end(); ++it) {
 		std::string friendName=(*it);
-		if (m_Users.find(friendName)!=m_Users.end())
+
+		if (m_Users.find(friendName)!=m_Users.end() && !user->isBlocking(friendName))
 			user->sendUserStatusUpdate(friendName, User::Online);
 	}
 
@@ -72,64 +92,9 @@ void UserManager::removeUser(User *user) {
 void UserManager::kickAll() {
 	lock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
 
+	// iterate over list of online users and systematically kick each one of them
 	for (std::map<std::string, User*>::iterator it=m_Users.begin(); it!=m_Users.end(); ++it)
 			(*it).second->kick();
-
-	unlock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
-}
-
-void UserManager::addFriendTo(const std::string &target, const std::string &username) {
-	lock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
-
-	// stupidity check: the user tries to add himself
-	if (target==username) {
-		m_Users[target]->sendServerMessage("You can't add yourself to your friend list!");
-		unlock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
-
-		return;
-	}
-
-	Database *db=Database::getHandle();
-	if (db->open()) {
-		// check if the friend exists
-		std::string sql="SELECT * FROM users WHERE ";
-		sql+=db->compareFoldCase("username", username);
-		Database::QueryResult res=db->query(sql);
-
-		if (res.rowCount()>0) {
-			std::string friendId=res.rowAt(0)[0];
-
-			sql="SELECT * FROM users WHERE ";
-			sql+=db->compareFoldCase("username", target);
-			res=db->query(sql);
-
-			// add the friend to the target's list
-			std::stringstream ss;
-			ss << "INSERT INTO friendlists VALUES(NULL,";
-			ss << res.rowAt(0)[0] << ",";
-			ss << friendId << ")";
-
-			Database::QueryResult res=db->query(ss.str());
-
-			// and append the username to the client's current friendlist
-			m_Users[target]->addFriend(username);
-			m_Users[target]->sendFriendList();
-
-			// finally send that user's status
-			m_Users[target]->sendUserStatusUpdate(username, m_Users.find(username)!=m_Users.end());
-		}
-
-		// inform the user that such a username doesn't exist
-		else {
-			std::string msg="The username '";
-			msg+=username;
-			msg+="' does not exist.";
-
-			m_Users[target]->sendServerMessage(msg);
-		}
-	}
-
-	delete db;
 
 	unlock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
 }
@@ -137,7 +102,8 @@ void UserManager::addFriendTo(const std::string &target, const std::string &user
 void UserManager::deliverTextMessageTo(const std::string &sender, const std::string &who, const std::string &message) {
 	lock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
 
-	if (m_Users.find(who)!=m_Users.end())
+	// see if the user is online, and if so, send him the text message
+	if (m_Users.find(who)!=m_Users.end() && !m_Users[who]->isBlocking(sender))
 		m_Users[who]->sendTextMessage(sender, message);
 
 	unlock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
@@ -149,10 +115,14 @@ void UserManager::broadcastUserStatus(User *user, User::Status status) {
 		User *client=(*it).second;
 		StringList friends=client->friends();
 
-		// TODO: pick a better data structure than list :/ an O(1) search time would be nice; maybe a hash table?
+		// iterate over all the friends on this user's list
 		for (StringList::const_iterator friendIt=friends.begin(); friendIt!=friends.end(); ++friendIt) {
 			std::string fname=(*friendIt);
-			if (fname==user->username()) {
+
+			// careful not to alert users who are blocking this user
+			if (fname==user->username() &&
+				(!isUserOnline(fname) ||
+				(isUserOnline(fname) && !m_Users[fname]->isBlocking(user->username())))) {
 				client->sendUserStatusUpdate(user->username(), status);
 				break;
 			}

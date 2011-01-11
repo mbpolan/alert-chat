@@ -19,8 +19,11 @@
  ***************************************************************************/
 // user.cpp: implementation of User class
 
+#include <sstream>
+
 #include "database.h"
 #include "user.h"
+#include "usermanager.h"
 
 User::User(const std::string &username, const std::string &password) {
 	m_Username=username;
@@ -47,12 +50,64 @@ void User::sendFriendList() {
 }
 
 // sends a friend's online status update
-void User::sendUserStatusUpdate(const std::string &user, bool online) {
-	m_ComProtocol->sendUserStatusUpdate(user, online);
+void User::sendUserStatusUpdate(const std::string &user, int status) {
+	m_ComProtocol->sendUserStatusUpdate(user, status);
 }
 
-void User::addFriend(const std::string &userName) {
-	m_FriendList.push_back(userName);
+void User::addFriend(const std::string &friendName) {
+	// see if this username is already a friend
+	for (StringList::iterator it=m_FriendList.begin(); it!=m_FriendList.end(); ++it) {
+		if ((*it)==friendName) {
+			sendServerMessage("This user is already on your friend list!");
+			return;
+		}
+	}
+
+	// stupidity check: the user tries to add himself
+	if (friendName==m_Username) {
+		sendServerMessage("You can't add yourself to your friend list!");
+		return;
+	}
+
+	m_FriendList.push_back(friendName);
+
+	// add the friend to the database
+	Database *db=Database::getHandle();
+	if (db->open()) {
+		// check if the friend exists
+		std::string sql="SELECT * FROM users WHERE ";
+		sql+=db->compareFoldCase("username", friendName);
+		Database::QueryResult friendRes=db->query(sql);
+
+		if (friendRes.rowCount()>0) {
+			// resolve this user's id
+			sql="SELECT * FROM users WHERE ";
+			sql+=db->compareFoldCase("username", m_Username);
+			Database::QueryResult thisRes=db->query(sql);
+
+			// add the friend to the user's list
+			std::stringstream ss;
+			ss << "INSERT INTO friendlists VALUES(NULL,";
+			ss << thisRes.rowAt(0)[0] << ",";
+			ss << friendRes.rowAt(0)[0] << ")";
+
+			db->query(ss.str());
+
+			// finally send that user's status
+			sendUserStatusUpdate(friendName, UserManager::defaultManager()->isUserOnline(friendName));
+		}
+
+		// inform the user that such a username doesn't exist
+		else {
+			std::string msg="The username '";
+			msg+=friendName;
+			msg+="' does not exist.";
+
+			sendServerMessage(msg);
+		}
+	}
+
+	delete db;
 }
 
 void User::removeFriend(const std::string &username) {
@@ -93,5 +148,66 @@ void User::removeFriend(const std::string &username) {
 	}
 
 	delete db;
+}
 
+void User::addBlockedUser(const std::string &username) {
+	// check if the user tried to block himself
+	if (username==m_Username)
+		return;
+
+	// first see if this username is in this user's friend list
+	for (StringList::iterator it=m_FriendList.begin(); it!=m_FriendList.end(); ++it) {
+		if ((*it)==username) {
+			it=m_FriendList.erase(it);
+			break;
+		}
+	}
+
+	// add the username to the blocked list
+	m_BlockList.push_back(username);
+
+	// update the database
+	Database *db=Database::getHandle();
+	if (db->open()) {
+		// resolve the blocked user's id
+		std::string sql="SELECT * FROM users WHERE ";
+		sql+=db->compareFoldCase("username", username);
+		Database::QueryResult blockRes=db->query(sql);
+
+		// resolve this user's databse id
+		sql="SELECT * FROM users WHERE ";
+		sql+=db->compareFoldCase("username", m_Username);
+		Database::QueryResult thisRes=db->query(sql);
+
+		// add an entry into the block list table in the database
+		sql="INSERT INTO blocklists VALUES(NULL,";
+		sql+=thisRes.rowAt(0)[0];
+		sql+=",";
+		sql+=blockRes.rowAt(0)[0];
+		sql+=")";
+		db->query(sql);
+
+		db->close();
+
+		// send a status update for this user
+		sendUserStatusUpdate(username, Blocked);
+	}
+
+	delete db;
+}
+
+void User::removeBlockedUser(const std::string &username) {
+
+}
+
+bool User::isBlocking(const std::string &username) const {
+	if (m_BlockList.empty())
+			return false;
+
+	for (StringList::const_iterator it=m_BlockList.begin(); it!=m_BlockList.end(); ++it) {
+		if ((*it)==username)
+			return true;
+	}
+
+	return false;
 }

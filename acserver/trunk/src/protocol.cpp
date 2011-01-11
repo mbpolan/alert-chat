@@ -164,6 +164,10 @@ void Protocol::handlePacket(Packet &p) {
 
 		case PROT_REMOVEFRIEND: clientSentRemoveFriend(p); break;
 
+		case PROT_BLOCKUSER: clientSentBlockUser(p); break;
+
+		case PROT_UNBLOCKUSER: clientSentUnblockUser(p); break;
+
 		case PROT_TEXTMESSAGE: clientSentTextMessage(p); break;
 
 		default: {
@@ -178,7 +182,21 @@ void Protocol::clientSentAddFriend(Packet &p) {
 	// target username
 	std::string username=p.string();
 
-	UserManager::defaultManager()->addFriendTo(m_User->username(), username);
+	m_User->addFriend(username);
+}
+
+void Protocol::clientSentBlockUser(Packet &p) {
+	std::string username=p.string();
+
+	// add the username to the user's list of blocked users
+	m_User->addBlockedUser(username);
+}
+
+void Protocol::clientSentUnblockUser(Packet &p) {
+	std::string username=p.string();
+
+	// remove the username from the user's list of blocked users
+	m_User->removeBlockedUser(username);
 }
 
 void Protocol::clientSentTextMessage(Packet &p) {
@@ -200,8 +218,10 @@ void Protocol::sendQueuedPackets() {
 	if (m_OutgoingPackets.empty())
 		return;
 
-	for (int i=0; i<m_OutgoingPackets.size(); i++)
-		m_OutgoingPackets[i].write(m_Socket);
+	for (int i=0; i<m_OutgoingPackets.size(); i++) {
+		if (!m_OutgoingPackets[i].write(m_Socket))
+			LogWriter::writer(LogWriter::Error)->writeLine("Unable to write packet!");
+	}
 
 	m_OutgoingPackets.clear();
 }

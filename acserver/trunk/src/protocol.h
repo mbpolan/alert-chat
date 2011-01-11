@@ -114,6 +114,16 @@ class Protocol {
 		void clientSentRemoveFriend(Packet &p);
 
 		/**
+		 * Handler for when a client has sent a request to block a user.
+		 */
+		void clientSentBlockUser(Packet &p);
+
+		/**
+		 * Handler for when a client has sent a request to unblock a user.
+		 */
+		void clientSentUnblockUser(Packet &p);
+
+		/**
 		 * Flushes the outgoing packet buffer.
 		 */
 		void sendQueuedPackets();
@@ -144,7 +154,7 @@ class Protocol {
 		 * Sends another user's status update to the user of this protocol.
 		 *
 		 * @param user The user for whom this status update applies to.
-		 * @param status An integer status code.
+		 * @param status An integer status code (see User::Status enum).
 		 */
 		void sendUserStatusUpdate(const std::string &user, int status);
 
