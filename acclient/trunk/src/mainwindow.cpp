@@ -54,6 +54,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionPreferences, SIGNAL(triggered()), this, SLOT(onPreferences()));
     connect(ui->actionAdd_By_Name, SIGNAL(triggered()), this, SLOT(onAddFriend()));
     connect(ui->actionRemove, SIGNAL(triggered()), this, SLOT(onRemoveFriend()));
+    connect(ui->actionBlock_Unblock, SIGNAL(triggered()), this, SLOT(onBlockUser()));
     connect(ui->actionView_History, SIGNAL(triggered()), this, SLOT(onViewHistory()));
     connect(ui->actionQuit, SIGNAL(triggered()), this, SLOT(onQuit()));
 		
@@ -150,6 +151,18 @@ void MainWindow::onRemoveFriend() {
     }
 }
 
+void MainWindow::onBlockUser() {
+    if (ui->friendView->currentItem()) {
+	  QTreeWidgetItem *item=ui->friendView->currentItem();
+	  QString user=item->text(0);
+
+	  if (m_BlockedUsers.contains(user))
+		m_Network->sendUnblockUser(user);
+	  else
+		m_Network->sendBlockUser(user);
+    }
+}
+
 void MainWindow::onViewHistory() {
     // request all available history files
     ListDialog ld(m_HistStore->savedHistories(), this);
@@ -227,7 +240,7 @@ void MainWindow::onNetMessage(QString msg, bool passive) {
 }
 
 void MainWindow::onNetUpdateFriendList(QList<QString> lst) {
-    for (QList<QString>::iterator it=lst.begin(); it!=lst.end(); ++it) {
+   for (QList<QString>::iterator it=lst.begin(); it!=lst.end(); ++it) {
 	  QStringList text;
 	  text << (*it);
 
@@ -236,23 +249,35 @@ void MainWindow::onNetUpdateFriendList(QList<QString> lst) {
 }
 
 void MainWindow::onNetUpdateUserStatus(QString username, int status) {
-    // online or offline
-    if (status==0 || status==1) {
-	  QList<QTreeWidgetItem*> items=ui->friendView->findItems(username, Qt::MatchExactly | Qt::MatchRecursive);
-	  if (items.empty())
-		qDebug() << "User " << username << " not found!";
+   // try to find the user's list entry
+    QList<QTreeWidgetItem*> items=ui->friendView->findItems(username, Qt::MatchExactly | Qt::MatchRecursive);
 
-	  QTreeWidgetItem *item=items.first();
-	  item->parent()->removeChild(item);
-
-	  // repare this item based on the user's status
-	  if (status==1)
-		ui->friendView->topLevelItem(0)->addChild(item);
-	  else
-		ui->friendView->topLevelItem(1)->addChild(item);
+    // if this user is not on the list, make sure to create an entry for him
+    QTreeWidgetItem *item;
+    if (items.empty()) {
+	  item=new QTreeWidgetItem;
+	  item->setText(0, username);
     }
 
-    // future: other types of user status (idle, away, etc)
+    else {
+	  // remove the item from the list
+	  item=items.first();
+	  item->parent()->removeChild(item);
+    }
+
+    // now find the appropriate category to classify this user under
+    QTreeWidgetItem *parent;
+    switch(status) {
+	  case NetworkManager::Offline: parent=ui->friendView->topLevelItem(1); break;
+	  case NetworkManager::Online: parent=ui->friendView->topLevelItem(0); break;
+	  case NetworkManager::Blocked: parent=ui->friendView->topLevelItem(2); break;
+	  default: parent=NULL; break;
+    }
+
+    if (parent)
+	  parent->addChild(item);
+    else
+	  qDebug() << "Unknown user status: " << status;
 }
 
 void MainWindow::onNetTextMessage(QString sender, QString text) {
@@ -270,6 +295,7 @@ void MainWindow::onNetTextMessage(QString sender, QString text) {
 
     // if chat history saving is enabled, save this message
     if (m_Config->valueForKey("saveChatHistory").toInt()) {
+	  // format: [date and time] sender: message
 	  QString line="[";
 	  line+=QDateTime::currentDateTime().toString(Qt::ISODate);
 	  line+="] ";
@@ -304,5 +330,9 @@ void MainWindow::resetTreeView() {
 
     lst.clear();
     lst << "Offline";
+    ui->friendView->addTopLevelItem(new QTreeWidgetItem(ui->friendView, lst));
+
+    lst.clear();
+    lst << "Blocked";
     ui->friendView->addTopLevelItem(new QTreeWidgetItem(ui->friendView, lst));
 }
