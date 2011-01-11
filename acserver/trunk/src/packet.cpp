@@ -115,7 +115,7 @@ bool Packet::write(Socket fd) {
 		sent+=n;
 		remaining-=n;
 	}
-	
+
 	return (n!=-1);
 }
 

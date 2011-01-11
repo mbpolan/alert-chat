@@ -130,6 +130,54 @@ StringList DatabaseSQLite3::getFriendList(const std::string &username) {
 	return friends;
 }
 
+StringList DatabaseSQLite3::getBlockedList(const std::string &username) {
+	StringList blocked;
+
+	std::stringstream ss;
+	ss << "SELECT * FROM users WHERE username=\'" << username << "\'";
+
+	// first get the user's id
+	QueryResult res=query(ss.str());
+	if (res.error()) {
+		std::string out="DatabaseSQLite3: Error while resolving user id for block list for user ";
+		out+=username+": "+res.errorMessage();
+
+		LogWriter::output(out, LogWriter::Error);
+		return blocked;
+	}
+
+	// now get all the blocked list entries for this user
+	// we got a row from the users table: <id>,<username>,<password>, the key is index 0
+	ss.str("");
+	ss << "SELECT * FROM blocklists WHERE user=" << res.rowAt(0)[0];
+
+	res=query(ss.str());
+	if (res.error()) {
+		std::string out="DatabaseSQLite3: Error while getting blocked list for user ";
+		out+=username+": "+res.errorMessage();
+
+		LogWriter::output(out, LogWriter::Error);
+		return blocked;
+	}
+
+	ss.str("");
+
+	for (int i=0; i<res.rowCount(); i++) {
+		// fetching from the blocklists table: <id>,<user>,<blocked id>
+		// index is at 2
+		ss << "SELECT * FROM users WHERE id=" << res.rowAt(i)[2];
+
+		// resolve this username by cross-referencing it with the users table
+		QueryResult resolve=query(ss.str());
+		if (!resolve.error())
+			blocked.push_back(resolve.rowAt(0)[1]);
+
+		ss.str("");
+	}
+
+	return blocked;
+}
+
 std::string DatabaseSQLite3::compareFoldCase(const std::string &column, const std::string &str) {
 	std::string sql=column;
 	sql+=" like '";

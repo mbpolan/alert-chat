@@ -58,6 +58,13 @@ class UserManager {
 		static UserManager* defaultManager();
 
 		/**
+		 * Finds out whether a given user is online.
+		 *
+		 * @return True if the user is online, false otherwise
+		 */
+		bool isUserOnline(const std::string &username) const;
+
+		/**
 		 * Adds a user to the pool of connected users.
 		 * The user should already be authenticated before adding him or her, otherwise
 		 * strange behavior will result for clients who have the user listed a friend.
@@ -79,16 +86,6 @@ class UserManager {
 		 * from the internal pool and closing their respective sockets.
 		 */
 		void kickAll();
-
-		/**
-		 * Tries to add the given username to a user's friend list.
-		 * This function also checks to see if the given username even exists in the
-		 * database, and if he doesn't, then it informs the user as such.
-		 *
-		 * @param target The user who wishes to add the friend.
-		 * @param friend Username of the friend to add.
-		 */
-		void addFriendTo(const std::string &target, const std::string &username);
 
 		/**
 		 * Coordinates sending a text message from one user to another.

@@ -38,7 +38,7 @@
 class User {
 	public:
 		/// A user's status.
-		enum Status { Offline=0, Online };
+		enum Status { Offline=0x00, Online=0x01, Blocked=0x02 };
 
 		/**
 		 * Constructs a user object for the given username and password.
@@ -90,13 +90,14 @@ class User {
 		 * Sends this user a status update of another user.
 		 *
 		 * @param user The username of the user in question.
-		 * @param online Whether or not the other user is online.
+		 * @param status The user's status (see the Status enum).
 		 */
-		void sendUserStatusUpdate(const std::string &user, bool online);
+		void sendUserStatusUpdate(const std::string &user, int status);
 	
 		/**
-		 * Adds a friend to this user's friend list.
-		 * This will cause an update to the database.
+		 * Tries to add the given username to a user's friend list.
+		 * This function also checks to see if the given username even exists in the
+		 * database, and if he doesn't, then it informs the user as such.
 		 *
 		 * @param username The username of another user to add.
 		 */
@@ -104,7 +105,6 @@ class User {
 
 		/**
 		 * Removes the given username from this user's friend list.
-		 * This will cause an update to the database.
 		 *
 		 * @param username The username of another user to remove.
 		 */
@@ -121,6 +121,41 @@ class User {
 		 * Returns a list of usernames who are designated as friends of this user.
 		 */
 		StringList friends() const { return m_FriendList; }
+
+		/**
+		 * Adds a user to this user's blocked-user list.
+		 *
+		 * @param username The username of the person to block.
+		 */
+		void addBlockedUser(const std::string &username);
+
+		/**
+		 * Removes a user from this user's blocked list.
+		 *
+		 * @param username The username of the person to unblock.
+		 */
+		void removeBlockedUser(const std::string &username);
+
+		/**
+		 * Sets this user's list of blocked users.
+		 *
+		 * @param lst The list of blocked users.
+		 */
+		void setBlockedList(const StringList &lst) { m_BlockList=lst; }
+
+		/**
+		 * Returns this user's list of blocked users.
+		 *
+		 * @return List of blocked usernames.
+		 */
+		StringList blockedUsers() const { return m_BlockList; }
+
+		/**
+		 * Find out whether a given username is on this user's list of blocked users.
+		 *
+		 * @return True if the username is blocked, false otherwise.
+		 */
+		bool isBlocking(const std::string &username) const;
 	
 	private:
 		/// Protocol for this user.
@@ -134,6 +169,9 @@ class User {
 		
 		/// The user's list of friends.
 		StringList m_FriendList;
+
+		/// The user's list of blocked users
+		StringList m_BlockList;
 };
 
 #endif

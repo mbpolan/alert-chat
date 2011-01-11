@@ -175,6 +175,13 @@ class Database {
 		virtual StringList getFriendList(const std::string &username)=0;
 
 		/**
+		 * Extracts all the users who are on the given user's blocked list.
+		 *
+		 * @return A vector of usernames, or empty if there are none.
+		 */
+		virtual StringList getBlockedList(const std::string &username)=0;
+
+		/**
 		 * Returns a formatted SQL statement for case insensitive string comparison.
 		 * This is useful for finding users in the database based strictly on their
 		 * base names, regardless of how the name itself is formatted.
