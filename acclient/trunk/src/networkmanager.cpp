@@ -110,6 +110,24 @@ void NetworkManager::sendRemoveFriend(const QString &username) {
     p.write(m_Socket);
 }
 
+void NetworkManager::sendBlockUser(const QString &username) {
+    Packet p;
+
+    p.addByte(PROT_BLOCKUSER);
+    p.addString(username);
+
+    p.write(m_Socket);
+}
+
+void NetworkManager::sendUnblockUser(const QString &username) {
+    Packet p;
+
+    p.addByte(PROT_UNBLOCKUSER);
+    p.addString(username);
+
+    p.write(m_Socket);
+}
+
 void NetworkManager::onConnected() {
     // send the identification packet
     Packet p;

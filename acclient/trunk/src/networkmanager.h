@@ -35,6 +35,7 @@ class NetworkManager : public QObject {
 
 		enum ClientMode { User=0, Register };
 		enum RegistrationCode { NoError=0, UsernameTaken=1 };
+		enum UserStatus { Offline=0x00, Online=0x01, Blocked=0x02 };
 
 		explicit NetworkManager(const ClientMode &mode, QObject *parent=NULL);
 		~NetworkManager();
@@ -51,6 +52,8 @@ class NetworkManager : public QObject {
 		void sendTextMessage(const QString &toWhom, const QString &text);
 		void sendAddFriend(const QString &username);
 		void sendRemoveFriend(const QString &username);
+		void sendBlockUser(const QString &username);
+		void sendUnblockUser(const QString &username);
 	
     signals:
 		void authenticate();

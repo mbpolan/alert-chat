@@ -58,6 +58,7 @@
     </property>
     <addaction name="actionAdd_By_Name"/>
     <addaction name="actionRemove"/>
+    <addaction name="actionBlock_Unblock"/>
     <addaction name="separator"/>
     <addaction name="actionView_History"/>
    </widget>
@@ -125,6 +126,11 @@
   <action name="actionView_History">
    <property name="text">
     <string>View History</string>
+   </property>
+  </action>
+  <action name="actionBlock_Unblock">
+   <property name="text">
+    <string>Block/Unblock</string>
    </property>
   </action>
  </widget>
