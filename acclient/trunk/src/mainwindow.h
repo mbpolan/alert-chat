@@ -85,9 +85,6 @@ class MainWindow: public QMainWindow {
 		QString m_User;
 
 		QSystemTrayIcon *m_Icon;
-
-		// list of blocked users
-		QStringList m_BlockedUsers;
 		
 		Ui::MainWindow *ui;
 };
