@@ -54,18 +54,15 @@ void UserManager::addUser(User *user) {
 
 	// set the block status on all blocked users
 	StringList blocked=user->blockedUsers();
-	for (StringList::iterator it=blocked.begin(); it!=blocked.end(); ++it) {
-		std::cout << "wysylam status zablokowany... ";
+	for (StringList::iterator it=blocked.begin(); it!=blocked.end(); ++it)
 		user->sendUserStatusUpdate((*it), User::Blocked);
-		std::cout << "zakonczono\n";
-	}
 
 	// send an initial friend list status update as well
 	StringList friends=user->friends();
 	for (StringList::iterator it=friends.begin(); it!=friends.end(); ++it) {
 		std::string friendName=(*it);
 
-		if (m_Users.find(friendName)!=m_Users.end() && !user->isBlocking(friendName))
+		if (m_Users.find(friendName)!=m_Users.end() && !m_Users[friendName]->isBlocking(user->username()))
 			user->sendUserStatusUpdate(friendName, User::Online);
 	}
 
@@ -102,8 +99,10 @@ void UserManager::kickAll() {
 void UserManager::deliverTextMessageTo(const std::string &sender, const std::string &who, const std::string &message) {
 	lock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
 
-	// see if the user is online, and if so, send him the text message
-	if (m_Users.find(who)!=m_Users.end() && !m_Users[who]->isBlocking(sender))
+	// see if the user is online, and if so, send him the text message assuming that neither
+	// party is blocking the other
+	if (m_Users.find(who)!=m_Users.end() &&
+		!m_Users[who]->isBlocking(sender) && !m_Users[sender]->isBlocking(who))
 		m_Users[who]->sendTextMessage(sender, message);
 
 	unlock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
@@ -119,10 +118,8 @@ void UserManager::broadcastUserStatus(User *user, User::Status status) {
 		for (StringList::const_iterator friendIt=friends.begin(); friendIt!=friends.end(); ++friendIt) {
 			std::string fname=(*friendIt);
 
-			// careful not to alert users who are blocking this user
-			if (fname==user->username() &&
-				(!isUserOnline(fname) ||
-				(isUserOnline(fname) && !m_Users[fname]->isBlocking(user->username())))) {
+			// so this client has the user as a friend; make sure he is also not blocking him
+			if (fname==user->username() && !client->isBlocking(user->username())) {
 				client->sendUserStatusUpdate(user->username(), status);
 				break;
 			}
