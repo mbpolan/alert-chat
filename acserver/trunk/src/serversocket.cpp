@@ -38,6 +38,10 @@ void ServerSocket::close() {
 	::close(m_Socket);
 }
 
+void ServerSocket::shutdown() {
+	::shutdown(m_Socket, SHUT_RDWR);
+}
+
 void ServerSocket::bind(const std::string &ip, int port) throw (Exception&) {
 	m_Socket=socket(PF_INET, SOCK_STREAM, 0);
 	if (m_Socket<0)
@@ -74,6 +78,8 @@ void ServerSocket::bind(const std::string &ip, int port) throw (Exception&) {
 	
 	else
 		ret=::bind(m_Socket, ai->ai_addr, ai->ai_addrlen);
+
+	freeaddrinfo(ai);
 	
 	// perform some error checking at this point
 	if (ret<0)
