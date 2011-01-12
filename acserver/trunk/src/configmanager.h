@@ -46,11 +46,6 @@ class ConfigManager {
 		ConfigManager(const std::string &file);
 
 		/**
-		 * Frees any memory associated with a configuration file.
-		 */
-		~ConfigManager();
-
-		/**
 		 * Returns a pointer to the default configuration manager which was set
 		 * at some point in the code.
 		 *

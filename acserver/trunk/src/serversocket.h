@@ -64,6 +64,11 @@ class ServerSocket {
 		void close();
 
 		/**
+		 * Terminates the socket, and awakes all threads blocking on it.
+		 */
+		void shutdown();
+
+		/**
 		 * Tries to bind this socket to the given address and port.
 		 */
 		void bind(const std::string &ip, int port) throw(Exception&);

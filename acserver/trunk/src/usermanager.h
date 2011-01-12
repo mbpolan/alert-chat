@@ -48,11 +48,6 @@ class UserManager {
 		UserManager();
 
 		/**
-		 * Frees any resources associated with this manager.
-		 */
-		~UserManager();
-
-		/**
 		 * Returns the default user manager, or NULL if none have been allocated.
 		 */
 		static UserManager* defaultManager();

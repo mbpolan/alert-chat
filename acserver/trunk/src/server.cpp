@@ -22,6 +22,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <signal.h>
 #include <sstream>
 #include <sys/socket.h>
 #include <sys/time.h>
@@ -37,8 +38,21 @@
 #include "threadpool.h"
 #include "usermanager.h"
 
+// keeps the server's new connection loop alive
+bool g_AcceptLoop=true;
+
+ServerSocket g_Socket;
 ConfigManager *g_ConfigManager;
 UserManager *g_UserManager;
+
+// signal handler for the SIGINT signal
+void signalHandler(int sig) {
+	if (sig==SIGINT) {
+		// flag the accept loop to terminate
+		g_AcceptLoop=false;
+		g_Socket.shutdown();
+	}
+}
 
 // thread routine for handling a new connection from a user
 void* connectionHandler(void *param) {
@@ -147,6 +161,9 @@ int main(int argc, char *argv[]) {
 		exit(0);
 	}
 	
+	// enable signal handlers
+	signal(SIGINT, signalHandler);
+
 	// load our configuration file
 	g_ConfigManager=new ConfigManager("server.conf");
 	if (!g_ConfigManager->parse()) {
@@ -169,11 +186,10 @@ int main(int argc, char *argv[]) {
 	LogWriter::initialize(logs);
 
 	// setup a server socket for incoming connections
-	ServerSocket sock;
 	try {
-		sock.bind(g_ConfigManager->valueForKey("ip").toString(),
+		g_Socket.bind(g_ConfigManager->valueForKey("ip").toString(),
 				  g_ConfigManager->valueForKey("port").toInt());
-		sock.listen();
+		g_Socket.listen();
 	}
 	
 	catch (ServerSocket::Exception &e) {
@@ -190,11 +206,11 @@ int main(int argc, char *argv[]) {
 	g_UserManager=new UserManager;
 
 	// accept incoming connections
-	while(1) {
+	while(g_AcceptLoop) {
 		std::string ip;
 		
 		// see if this socket is valid
-		Socket fd=sock.accept(ip);
+		Socket fd=g_Socket.accept(ip);
 		if (fd>=0) {
 			if (pool.createThread(connectionHandler, &fd)!=ThreadPool::NoError) {
 				std::stringstream ss;
@@ -212,9 +228,6 @@ int main(int argc, char *argv[]) {
 	
 	// disconnect all users
 	g_UserManager->kickAll();
-
-	// close the socket and join all active threads
-	sock.close();
 	
 	// destroy managers
 	delete g_ConfigManager;
