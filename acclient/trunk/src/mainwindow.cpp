@@ -156,7 +156,7 @@ void MainWindow::onBlockUser() {
 	  QTreeWidgetItem *item=ui->friendView->currentItem();
 	  QString user=item->text(0);
 
-	  if (m_BlockedUsers.contains(user))
+	  if (item->parent()->text(0)=="Blocked")
 		m_Network->sendUnblockUser(user);
 	  else
 		m_Network->sendBlockUser(user);
@@ -178,7 +178,7 @@ void MainWindow::onViewHistory() {
 }
 
 void MainWindow::onFriendNameClicked(QTreeWidgetItem *item, int) {
-    if (item && item->text(0)!="Online" && item->text(0)!="Offline") {
+    if (item && item->parent()) {
 	  // open a dialog window for this conversation
 	  bool ok;
 	  QString text=QInputDialog::getText(this, tr("Send Message"), tr("Message"), QLineEdit::Normal, QString(), &ok);
