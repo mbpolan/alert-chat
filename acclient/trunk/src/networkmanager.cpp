@@ -187,13 +187,16 @@ void NetworkManager::onSocketState(QAbstractSocket::SocketState state) {
 }
 
 void NetworkManager::onDataReady() {
-	Packet p;
-	if (p.read(m_Socket))
-		handlePacket(p);
-	
-	else {
-		qDebug() << "Read corrupt data";
-		disconnect();
+	// make sure we read in ALL awaiting packets
+	while(m_Socket->bytesAvailable()) {
+		Packet p;
+		if (p.read(m_Socket))
+			handlePacket(p);
+
+		else {
+			qDebug() << "Read corrupt data";
+			disconnect();
+		}
 	}
 }
 
