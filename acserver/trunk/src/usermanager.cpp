@@ -96,6 +96,19 @@ void UserManager::kickAll() {
 	unlock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
 }
 
+bool UserManager::isUserBlocking(const std::string &target, const std::string &who) {
+	lock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
+
+	bool result=false;
+
+	if (m_Users.find(target)!=m_Users.end())
+		result=m_Users[target]->isBlocking(who);
+
+	unlock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
+
+	return result;
+}
+
 void UserManager::deliverTextMessageTo(const std::string &sender, const std::string &who, const std::string &message) {
 	lock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
 
@@ -104,6 +117,14 @@ void UserManager::deliverTextMessageTo(const std::string &sender, const std::str
 	if (m_Users.find(who)!=m_Users.end() &&
 		!m_Users[who]->isBlocking(sender) && !m_Users[sender]->isBlocking(who))
 		m_Users[who]->sendTextMessage(sender, message);
+
+	unlock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
+}
+
+void UserManager::dispatchUserStatusTo(const std::string &target, const std::string &who, int status) {
+	lock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
+
+	m_Users[target]->sendUserStatusUpdate(who, status);
 
 	unlock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
 }

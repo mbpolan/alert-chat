@@ -49,6 +49,13 @@ class User {
 		User(const std::string &username, const std::string &password);
 
 		/**
+		 * Sets the user's database ID.
+		 *
+		 * @param id The ID to assign to this user.
+		 */
+		void setID(int id) { m_ID=id; }
+
+		/**
 		 * Sets the protocol for this user.
 		 * This function MUST be called to ensure proper operation.
 		 *
@@ -166,6 +173,9 @@ class User {
 
 		/// The user's password.
 		std::string m_Password;
+
+		/// The user's database ID.
+		int m_ID;
 		
 		/// The user's list of friends.
 		StringList m_FriendList;

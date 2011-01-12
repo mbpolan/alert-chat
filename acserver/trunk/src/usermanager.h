@@ -88,6 +88,15 @@ class UserManager {
 		void kickAll();
 
 		/**
+		 * Wrapper method to find out if a user is blocking a given username.
+		 *
+		 * @param target The user in question.
+		 * @param who The username of the potentially blocked user to test.
+		 * @return True if who is blocked by target, false otherwise or if the target is offline.
+		 */
+		bool isUserBlocking(const std::string &target, const std::string &who);
+
+		/**
 		 * Coordinates sending a text message from one user to another.
 		 *
 		 * @param sender The username of the user who sent the message.
@@ -95,6 +104,15 @@ class UserManager {
 		 * @param message The string containing the message to send.
 		 */
 		void deliverTextMessageTo(const std::string &sender, const std::string &who, const std::string &message);
+
+		/**
+		 * Sends a user status update to the given user.
+		 *
+		 * @param target The user to send the status update to.
+		 * @param who The user to whom this pertains to.
+		 * @param status Integer code representing the user's status.
+		 */
+		void dispatchUserStatusTo(const std::string &target, const std::string &who, int status);
 
 	private:
 		/**
