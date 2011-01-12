@@ -74,12 +74,16 @@ void* connectionHandler(void *param) {
 			// get this user's friend and blocked lists
 			Database *db=Database::getHandle();
 			if (db->open()) {
-				StringList friends=db->getFriendList(username);
-				StringList blocked=db->getBlockedList(username);
+				int id=db->getUserID(username);
+				StringList friends=db->getFriendList(id);
+				StringList blocked=db->getBlockedList(id);
 				db->close();
 
+				user->setID(id);
 				user->setFriendList(friends);
 				user->setBlockedList(blocked);
+
+				// send the user his friend list
 				user->sendFriendList();
 			}
 			delete db;

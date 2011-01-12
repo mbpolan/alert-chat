@@ -75,20 +75,28 @@ class DatabaseSQLite3: public Database {
 		Database::QueryResult query(const std::string &sql);
 
 		/**
+		 * Maps a given username to its primary key in the database.
+		 *
+		 * @param username The username to look up.
+		 * @return The user's primary key ID.
+		 */
+		int getUserID(const std::string &username);
+
+		/**
 		 * Fetches the friend list for the given username.
 		 *
-		 * @param username The name of the user for whom to fetch a friend list.
+		 * @param userID The id of the user, gotten from a call to getUserID().
 		 * @return Vector of usernames, potentially empty if the user has no saved friends.
 		 */
-		StringList getFriendList(const std::string &username);
+		StringList getFriendList(int userID);
 
 		/**
 		 * Fetches the blocked list for the given username.
 		 *
-		 * @param username The name of the user for whom to fetch a blocked list.
+		 * @param userID The id of the user, gotten from a call to getUserID().
 		 * @return Vector of usernames, potentially empty if the user has no blocked users.
 		 */
-		StringList getBlockedList(const std::string &username);
+		StringList getBlockedList(int userID);
 
 		/**
 		 * Implements a case insensitive comparison of table columns and values.

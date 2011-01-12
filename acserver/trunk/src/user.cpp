@@ -28,6 +28,7 @@
 User::User(const std::string &username, const std::string &password) {
 	m_Username=username;
 	m_Password=password;
+	m_ID=-1;
 
 	m_ComProtocol=NULL;
 }
@@ -80,15 +81,10 @@ void User::addFriend(const std::string &friendName) {
 		Database::QueryResult friendRes=db->query(sql);
 
 		if (friendRes.rowCount()>0) {
-			// resolve this user's id
-			sql="SELECT * FROM users WHERE ";
-			sql+=db->compareFoldCase("username", m_Username);
-			Database::QueryResult thisRes=db->query(sql);
-
 			// add the friend to the user's list
 			std::stringstream ss;
 			ss << "INSERT INTO friendlists VALUES(NULL,";
-			ss << thisRes.rowAt(0)[0] << ",";
+			ss << m_ID << ",";
 			ss << friendRes.rowAt(0)[0] << ")";
 
 			db->query(ss.str());
@@ -121,28 +117,16 @@ void User::removeFriend(const std::string &username) {
 	// now remove this user from the database
 	Database *db=Database::getHandle();
 	if (db->open()) {
-		// resolve this user's id
-		std::string query="SELECT * FROM users WHERE username='";
-		query+=m_Username;
-		query+="'";
-		Database::QueryResult res=db->query(query);
-
-		std::string thisUser=res.rowAt(0)[0];
-
-		// now resolve the other user's id
-		query="SELECT * FROM users WHERE username='";
-		query+=username;
-		query+="'";
-		res=db->query(query);
-
-		std::string toRemove=res.rowAt(0)[0];
+		// resolve the other user's id
+		int friendId=db->getUserID(username);
 
 		// finally remove this user from the user's friendlist
-		query="DELETE FROM friendlists WHERE user=";
-		query+=thisUser;
-		query+=" AND friend=";
-		query+=toRemove;
-		db->query(query);
+		std::stringstream ss;
+		ss << "DELETE FROM friendlists WHERE user=" << m_ID;
+		ss << " AND friend=";
+		ss << friendId;
+
+		db->query(ss.str());
 
 		db->close();
 	}
@@ -151,8 +135,8 @@ void User::removeFriend(const std::string &username) {
 }
 
 void User::addBlockedUser(const std::string &username) {
-	// check if the user tried to block himself
-	if (username==m_Username)
+	// check if the user tried to block himself, or if this user is already blocked
+	if (username==m_Username || isBlocking(username))
 		return;
 
 	// first see if this username is in this user's friend list
@@ -170,34 +154,70 @@ void User::addBlockedUser(const std::string &username) {
 	Database *db=Database::getHandle();
 	if (db->open()) {
 		// resolve the blocked user's id
-		std::string sql="SELECT * FROM users WHERE ";
-		sql+=db->compareFoldCase("username", username);
-		Database::QueryResult blockRes=db->query(sql);
-
-		// resolve this user's databse id
-		sql="SELECT * FROM users WHERE ";
-		sql+=db->compareFoldCase("username", m_Username);
-		Database::QueryResult thisRes=db->query(sql);
+		int blockedId=db->getUserID(username);
 
 		// add an entry into the block list table in the database
-		sql="INSERT INTO blocklists VALUES(NULL,";
-		sql+=thisRes.rowAt(0)[0];
-		sql+=",";
-		sql+=blockRes.rowAt(0)[0];
-		sql+=")";
-		db->query(sql);
+		std::stringstream ss;
+		ss << "INSERT INTO blocklists VALUES(NULL," << m_ID << ",";
+		ss << blockedId << ")";
+		db->query(ss.str());
 
 		db->close();
 
 		// send a status update for this user
 		sendUserStatusUpdate(username, Blocked);
+
+		// if the other user is online, send him a status telling him that we're offline
+		UserManager *um=UserManager::defaultManager();
+		if (um->isUserOnline(username) && !um->isUserBlocking(username, m_Username))
+			um->dispatchUserStatusTo(username, m_Username, Offline);
 	}
 
 	delete db;
 }
 
 void User::removeBlockedUser(const std::string &username) {
+	// stupidity check, user can't block/unblock himself, and the target username must
+	// already be on the blocked list
+	if (m_Username==username || !isBlocking(username))
+		return;
 
+	// remove the user from the block list
+	for (StringList::iterator it=m_BlockList.begin(); it!=m_BlockList.end(); ++it) {
+		if ((*it)==username) {
+			it=m_BlockList.erase(it);
+			break;
+		}
+	}
+
+	// remove the database entry
+	Database *db=Database::getHandle();
+	if (db->open()) {
+		// resolve the target's id
+		int userID=db->getUserID(username);
+
+		std::stringstream ss;
+		ss << "DELETE FROM blocklists WHERE user=" << m_ID;
+		ss << " AND blocked=" << userID;
+
+		db->query(ss.str());
+		db->close();
+
+		// tell both users about each others' statuses
+		UserManager *um=UserManager::defaultManager();
+		if (um->isUserOnline(username) && !um->isUserBlocking(username, m_Username)) {
+			// the other user is NOT blocking this client, so tell both of them that each
+			// is online
+			um->dispatchUserStatusTo(username, m_Username, Online);
+			sendUserStatusUpdate(username, Online);
+		}
+
+		// otherwise, the other user IS blocking this client
+		else
+			sendUserStatusUpdate(username, Offline);
+	}
+
+	delete db;
 }
 
 bool User::isBlocking(const std::string &username) const {

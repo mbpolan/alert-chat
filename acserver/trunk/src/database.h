@@ -168,18 +168,26 @@ class Database {
 		virtual Database::QueryResult query(const std::string &sql)=0;
 
 		/**
+		 * Maps a given username to its primary key in the database.
+		 *
+		 * @param username The username to look up.
+		 * @return The user's primary key ID.
+		 */
+		virtual int getUserID(const std::string &username)=0;
+
+		/**
 		 * Extracts all the users who are on the given user's friend list.
 		 *
 		 * @return A vector of usernames, or empty if there are none.
 		 */
-		virtual StringList getFriendList(const std::string &username)=0;
+		virtual StringList getFriendList(int id)=0;
 
 		/**
 		 * Extracts all the users who are on the given user's blocked list.
 		 *
 		 * @return A vector of usernames, or empty if there are none.
 		 */
-		virtual StringList getBlockedList(const std::string &username)=0;
+		virtual StringList getBlockedList(int id)=0;
 
 		/**
 		 * Returns a formatted SQL statement for case insensitive string comparison.
