@@ -104,7 +104,7 @@ void* connectionHandler(void *param) {
 
 			// have the receive call timeout after a given time
 			struct timeval tv;
-			int rto=g_ConfigManager->valueForKey("internal_recvtimeout").toInt();
+			int rto=1000;
 			tv.tv_sec=rto/1000;
 			tv.tv_usec=(rto%1000)*1000;
 

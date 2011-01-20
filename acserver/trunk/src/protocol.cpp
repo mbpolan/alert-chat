@@ -148,6 +148,7 @@ void Protocol::relay() {
 		if (rc==Packet::NoError)
 			handlePacket(p);
 
+		m_User->cleanMessageTimeStack();
 		sendQueuedPackets();
 	}
 }

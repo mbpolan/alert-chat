@@ -163,6 +163,30 @@ class User {
 		 * @return True if the username is blocked, false otherwise.
 		 */
 		bool isBlocking(const std::string &username) const;
+
+		/**
+		 * Pushes the given time onto the user's message time stack.
+		 * This is used in rate-limiting. The stack records the last few times when
+		 * a user sent a message, and every time a message is sent by this user, it is
+		 * necessary to call this method.
+		 *
+		 * @param time The time (UNIX timestamp) when a message was sent.
+		 */
+		void pushMessageTime(time_t time);
+
+		/**
+		 * Automatically cleans up and removes message times in the stack that are
+		 * older than what is defined in the configuration file. This ensures that
+		 * rate-limiting is handled correctly. This method should be called every 1000 ms.
+		 */
+		void cleanMessageTimeStack();
+
+		/**
+		 * Returns the amount of message times still remaining in the user's stack.
+		 *
+		 * @return The amount of message sent times that haven't been removed.
+		 */
+		int messageCount() const { return m_LastMessageTimes.size(); }
 	
 	private:
 		/// Protocol for this user.
@@ -182,6 +206,9 @@ class User {
 
 		/// The user's list of blocked users
 		StringList m_BlockList;
+
+		/// Records when the user sent his or her last few text messages.
+		std::list<time_t> m_LastMessageTimes;
 };
 
 #endif

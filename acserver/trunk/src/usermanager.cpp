@@ -21,6 +21,7 @@
 
 #include <sstream>
 
+#include "configmanager.h"
 #include "database.h"
 #include "usermanager.h"
 
@@ -115,8 +116,21 @@ void UserManager::deliverTextMessageTo(const std::string &sender, const std::str
 	// see if the user is online, and if so, send him the text message assuming that neither
 	// party is blocking the other
 	if (m_Users.find(who)!=m_Users.end() &&
-		!m_Users[who]->isBlocking(sender) && !m_Users[sender]->isBlocking(who))
-		m_Users[who]->sendTextMessage(sender, message);
+		!m_Users[who]->isBlocking(sender) && !m_Users[sender]->isBlocking(who)) {
+		User *a=m_Users[sender];
+
+		// get the rate limiting data
+		int msgCount=ConfigManager::manager()->valueForKey("msgs-per-unit").toInt();
+
+		// make sure the user didn't pass the rate limit yet
+		if (a->messageCount()>=msgCount)
+			m_Users[sender]->sendServerMessage("You have sent too many messages in a short time!");
+
+		else {
+			a->pushMessageTime(time(NULL));
+			m_Users[who]->sendTextMessage(sender, message);
+		}
+	}
 
 	unlock(&Threads::g_Mutexes[MUTEX_USERMANAGER]);
 }

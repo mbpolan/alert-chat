@@ -21,6 +21,7 @@
 
 #include <sstream>
 
+#include "configmanager.h"
 #include "database.h"
 #include "user.h"
 #include "usermanager.h"
@@ -230,4 +231,24 @@ bool User::isBlocking(const std::string &username) const {
 	}
 
 	return false;
+}
+
+void User::pushMessageTime(time_t time) {
+	if (m_LastMessageTimes.size()==10) {
+		m_LastMessageTimes.pop_back();
+	}
+
+	m_LastMessageTimes.push_front(time);
+}
+
+void User::cleanMessageTimeStack() {
+	// remove any message times older than n seconds
+	time_t now=time(NULL);
+	std::list<time_t>::reverse_iterator it=m_LastMessageTimes.rbegin();
+	for (std::list<time_t>::iterator it=m_LastMessageTimes.begin(); it!=m_LastMessageTimes.end(); ++it) {
+		time_t msg=(*it);
+		if (now-msg>=ConfigManager::manager()->valueForKey("rate-time-unit").toInt()) {
+			it=m_LastMessageTimes.erase(it);
+		}
+	}
 }
