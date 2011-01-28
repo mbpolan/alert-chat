@@ -33,7 +33,7 @@ PreferencesDialog::PreferencesDialog(ConfigLoader *config, QWidget *parent) :
     ui->saveChatHistory->setChecked(config->valueForKey("saveChatHistory").toInt());
     ui->promptUnknown->setChecked(config->valueForKey("promptUnknown").toInt());
 
-    ui->enableSounds->setChecked(config->valueForKey("enableSounds").toInt());
+    //ui->enableSounds->setChecked(config->valueForKey("enableSounds").toInt());
 }
 
 PreferencesDialog::~PreferencesDialog() {
@@ -47,5 +47,5 @@ void PreferencesDialog::synchronize(ConfigLoader *config) {
     config->setValueForKey("port", QString("%1").arg(ui->port->value()));
     config->setValueForKey("saveChatHistory", QString("%1").arg(ui->saveChatHistory->isChecked()));
     config->setValueForKey("promptUnknown", QString("%1").arg(ui->promptUnknown->isChecked()));
-    config->setValueForKey("enableSounds", QString("%1").arg(ui->enableSounds->isChecked()));
+    //config->setValueForKey("enableSounds", QString("%1").arg(ui->enableSounds->isChecked()));
 }
