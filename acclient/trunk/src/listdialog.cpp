@@ -35,9 +35,11 @@ ListDialog::ListDialog(const HistoryStore::DataMap &data, QWidget *parent):
 	  accounts.push_back(it.key());
 
     ui->accountBox->addItems(accounts);
-    ui->accountBox->setCurrentIndex(0);
 
-    onAccountChanged(accounts[0]);
+    if (!accounts.empty()) {
+        ui->accountBox->setCurrentIndex(0);
+        onAccountChanged(accounts[0]);
+    }
 
     // connect signals
     connect(ui->accountBox, SIGNAL(currentIndexChanged(QString)), this, SLOT(onAccountChanged(QString)));
