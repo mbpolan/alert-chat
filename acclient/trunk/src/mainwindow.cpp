@@ -313,7 +313,11 @@ void MainWindow::onQuit() {
 }
 
 void MainWindow::onAbout() {
+    QString text="Alert Chat Client v1.0a\n\n";
+    text+="The official client for use with an Alert Chat server.\n\n";
+    text+="Project website: http://alert-chat.sf.net";
 
+    QMessageBox::about(this, "Alert Chat Client", text);
 }
 
 void MainWindow::closeEvent(QCloseEvent *e) {
