@@ -1,4 +1,5 @@
 #include <QDebug>
+#include <QDesktopServices>
 #include <QFile>
 
 #include "configloader.h"
@@ -7,7 +8,7 @@ ConfigLoader::ConfigLoader(QObject *parent): QObject(parent) {
 }
 
 bool ConfigLoader::loadConfiguration(const QString &file) {
-    QFile f(file);
+    QFile f(QDesktopServices::storageLocation(QDesktopServices::HomeLocation)+"/"+file);
     if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
 	  return false;
 
@@ -37,7 +38,7 @@ bool ConfigLoader::loadConfiguration(const QString &file) {
 }
 
 bool ConfigLoader::saveConfiguration(const QString &file) {
-    QFile f(file);
+    QFile f(QDesktopServices::storageLocation(QDesktopServices::HomeLocation)+"/"+file);
     if (!f.open(QIODevice::WriteOnly))
 	  return false;
 

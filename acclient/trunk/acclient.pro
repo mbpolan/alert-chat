@@ -10,6 +10,10 @@ INCLUDEPATH += . src
 UI_DIR = ui
 MOC_DIR = moc
 
+win32 {
+    RC_FILE = resource.rc
+}
+
 # Input
 HEADERS += src/logindialog.h src/mainwindow.h src/networkmanager.h src/packet.h src/protspec.h \
     src/preferencesdialog.h \
@@ -37,3 +41,6 @@ SOURCES += src/client.cpp \
 
 RESOURCES += \
     resources.qrc
+
+OTHER_FILES += \
+    resource.rc

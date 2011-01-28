@@ -41,7 +41,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // load the configuration file
     m_Config=new ConfigLoader();
-    m_Config->loadConfiguration(QDir::currentPath()+"/client.conf");
+    m_Config->loadConfiguration(".client.conf");
 
     // prepare the friend list with default items
     resetTreeView();
@@ -123,7 +123,7 @@ void MainWindow::onPreferences() {
     if (pd.exec()==QDialog::Accepted) {
 	  // synchornize new preferences to internal configuration and save it
 	  pd.synchronize(m_Config);
-	  m_Config->saveConfiguration(QDir::currentPath()+"/client.conf");
+          m_Config->saveConfiguration(".client.conf");
     }
 }
 
