@@ -14,6 +14,10 @@ win32 {
     RC_FILE = resource.rc
 }
 
+mac {
+    ICON = icon.icns
+}
+
 # Input
 HEADERS += src/logindialog.h src/mainwindow.h src/networkmanager.h src/packet.h src/protspec.h \
     src/preferencesdialog.h \
