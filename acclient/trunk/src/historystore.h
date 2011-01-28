@@ -23,21 +23,24 @@
 #define HISTORYSTORE_H
 
 #include <QList>
+#include <QMap>
 #include <QObject>
 
 class HistoryStore: public QObject {
     Q_OBJECT
     public:
-	  HistoryStore(QObject *parent=NULL);
+	  typedef QMap<QString, QStringList> DataMap;
+
+	   HistoryStore(QObject *parent=NULL);
 
 	  // adds a line of message to a user's saved history
-	  void appendTextMessage(const QString &username, const QString &line);
+	  void appendTextMessage(const QString &account, const QString &username, const QString &line);
 
-	  // returns a list of all saved user histories
-	  QList<QString> savedHistories();
+	  // returns a list of all saved user histories for all accounts
+	  DataMap savedHistories();
 
 	  // returns the chat history for a particular user
-	  QString userHistory(const QString &username);
+	  QString userHistory(const QString &account, const QString &username);
 };
 
 #endif

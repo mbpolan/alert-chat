@@ -167,11 +167,12 @@ void MainWindow::onViewHistory() {
     // request all available history files
     ListDialog ld(m_HistStore->savedHistories(), this);
     if (ld.exec()==QDialog::Accepted) {
+	  QString account=ld.selectedAccount();
 	  QString username=ld.selectedUsername();
 
 	  // if the chosen username is valid, show the chat history for that user
 	  if (!username.isEmpty()) {
-		HistoryViewer hv(m_HistStore->userHistory(username), this);
+		HistoryViewer hv(m_HistStore->userHistory(account, username), this);
 		hv.exec();
 	  }
     }
@@ -195,7 +196,7 @@ void MainWindow::onFriendNameClicked(QTreeWidgetItem *item, int) {
 		    line+=": ";
 		    line+=text;
 
-		    m_HistStore->appendTextMessage(item->text(0), line);
+		    m_HistStore->appendTextMessage(m_User, item->text(0), line);
 		}
 	  }
     }
@@ -303,7 +304,7 @@ void MainWindow::onNetTextMessage(QString sender, QString text) {
 	  line+=": ";
 	  line+=text;
 
-	  m_HistStore->appendTextMessage(sender, line);
+	  m_HistStore->appendTextMessage(m_User, sender, line);
     }
 }
 
