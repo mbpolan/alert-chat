@@ -64,8 +64,7 @@ HistoryStore::DataMap HistoryStore::savedHistories() {
     DataMap data;
     QStringList accounts=dir.entryList();
     for (int i=0; i<accounts.size(); i++) {
-	  if (accounts.at(i)=="." || accounts.at(i)=="..")
-	  //if (!dir.cd(accounts.at(i)))
+          if (accounts.at(i)=="." || accounts.at(i)=="..")
 		continue;
 
 	  // go into the directory
