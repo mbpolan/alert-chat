@@ -23,7 +23,10 @@
 #define LISTDIALOG_H
 
 #include <QDialog>
+#include <QMap>
 #include <QStringList>
+
+#include "historystore.h"
 
 namespace Ui {
     class ListDialog;
@@ -32,11 +35,17 @@ namespace Ui {
 class ListDialog: public QDialog {
     Q_OBJECT
     public:
-	  explicit ListDialog(const QStringList &usernames, QWidget *parent=NULL);
+	  explicit ListDialog(const HistoryStore::DataMap &data, QWidget *parent=NULL);
 
+	  QString selectedAccount() const;
 	  QString selectedUsername() const;
 
+    private slots:
+	  void onAccountChanged(const QString &account);
+
     private:
+	  HistoryStore::DataMap m_ChatData;
+
 	  Ui::ListDialog *ui;
 };
 

@@ -17,12 +17,15 @@
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>Select one of the following users, for whom you would like to view your chat history.</string>
+      <string>Select an account, and then the user, for whom you would like to see a chat history.</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
      </property>
     </widget>
+   </item>
+   <item>
+    <widget class="QComboBox" name="accountBox"/>
    </item>
    <item>
     <widget class="QListWidget" name="userList"/>

@@ -33,10 +33,17 @@ HistoryStore::HistoryStore(QObject *parent): QObject(parent) {
 }
 
 // adds a line of message to a user's saved history
-void HistoryStore::appendTextMessage(const QString &username, const QString &line) {
+void HistoryStore::appendTextMessage(const QString &account, const QString &username, const QString &line) {
+    // make sure the account directory exists
+    QDir dir(QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation));
+    dir.cd("Alert Chat Histories");
+    if (!dir.exists(account))
+	  dir.mkdir(account);
+
     // open the target file, based on lowercase username
     QString path=QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation);
     path+="/Alert Chat Histories/";
+    path+=account+"/";
     path+=username.toLower();
     path+=".txt";
 
@@ -47,22 +54,46 @@ void HistoryStore::appendTextMessage(const QString &username, const QString &lin
     }
 }
 
-QList<QString> HistoryStore::savedHistories() {
+HistoryStore::DataMap HistoryStore::savedHistories() {
     // saved histories are stored as text files in the user's document store location,
     // under the Alert Chat Histories directory
     QDir dir(QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation));
     dir.cd("Alert Chat Histories");
 
-    // pull all file names, ending with .txt
-    QStringList filters;
-    filters << "*.txt";
-    return dir.entryList(filters);
+    // first get a list of all account directories
+    DataMap data;
+    QStringList accounts=dir.entryList();
+    for (int i=0; i<accounts.size(); i++) {
+	  if (accounts.at(i)=="." || accounts.at(i)=="..")
+	  //if (!dir.cd(accounts.at(i)))
+		continue;
+
+	  // go into the directory
+	  dir.cd(accounts.at(i));
+
+	  // pull all file names, ending with .txt
+	  QStringList filters;
+	  filters << "*.txt";
+	  QList<QString> entries=dir.entryList(filters);
+
+	  // remove the file extensions
+	  for (QList<QString>::iterator it=entries.begin(); it!=entries.end(); ++it) {
+		QString &entry=(*it);
+		entry=entry.left(entry.size()-4);
+	  }
+
+	  data[accounts.at(i)]=entries;
+	  dir.cdUp();
+    }
+
+    return data;
 }
 
-QString HistoryStore::userHistory(const QString &username) {
+QString HistoryStore::userHistory(const QString &account, const QString &username) {
     // open the target file, based on lowercase username
     QString path=QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation);
-    path+="/";
+    path+="/Alert Chat Histories/";
+    path+=account+"/";
     path+=username.toLower();
     path+=".txt";
 

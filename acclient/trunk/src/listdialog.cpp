@@ -24,15 +24,38 @@
 #include "listdialog.h"
 #include "ui_listdialog.h"
 
-ListDialog::ListDialog(const QStringList &usernames, QWidget *parent):
+ListDialog::ListDialog(const HistoryStore::DataMap &data, QWidget *parent):
 	  QDialog(parent), ui(new Ui::ListDialog) {
     ui->setupUi(this);
+    m_ChatData=data;
+
+    // fill the account combo box
+    QStringList accounts;
+    for (HistoryStore::DataMap::Iterator it=m_ChatData.begin(); it!=m_ChatData.end(); ++it)
+	  accounts.push_back(it.key());
+
+    ui->accountBox->addItems(accounts);
+    ui->accountBox->setCurrentIndex(0);
+
+    onAccountChanged(accounts[0]);
+
+    // connect signals
+    connect(ui->accountBox, SIGNAL(currentIndexChanged(QString)), this, SLOT(onAccountChanged(QString)));
+}
+
+void ListDialog::onAccountChanged(const QString &account) {
+    QStringList usernames=m_ChatData[account];
+    ui->userList->clear();
 
     // append all usernames into the list
     for (int i=0; i<usernames.size(); i++) {
 	  QString entry=usernames.at(i);
 	  QListWidgetItem *item=new QListWidgetItem(entry, ui->userList);
     }
+}
+
+QString ListDialog::selectedAccount() const {
+    return ui->accountBox->currentText();
 }
 
 QString ListDialog::selectedUsername() const {
