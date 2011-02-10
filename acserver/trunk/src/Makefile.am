@@ -1,5 +1,8 @@
 bin_PROGRAMS = acserver
 
+pkgsysconfdir = $(sysconfdir)/acserver
+pkgsysconf_DATA = data.db server.conf
+
 acserver_SOURCES = configmanager.cpp configmanager.h \
 		   database.cpp database.h \
 		   dbsqlite3.cpp dbsqlite3.h \
