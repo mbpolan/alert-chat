@@ -145,6 +145,7 @@ void* connectionHandler(void *param) {
 }
 
 int main(int argc, char *argv[]) {
+	std::string prefix="";
 	if (argc>1) {
 		// show a help message
 		if (strcmp(argv[1], "--help")==0) {
@@ -152,20 +153,30 @@ int main(int argc, char *argv[]) {
 			std::cout << "\nThe server loads all configuration data from server.conf. Check ";
 			std::cout << "the aforementioned file for some brief documentation.\n\n";
 			std::cout << "Website: http://alert-chat.sf.net\n";
+		
+			exit(0);
 		}
 
 		// show the version string
-		else if (strcmp(argv[1], "--version")==0)
+		else if (strcmp(argv[1], "--version")==0) {
 			std::cout << VERSION << std::endl;
-
-		exit(0);
+			exit(0);
+		}
+		
+		// prefix for config file
+		else if (argc==3 && strcmp(argv[1], "--prefix")==0) {
+			prefix=argv[2];
+			
+			if (prefix[prefix.size()-1]!='/')
+				prefix+="/";
+		}
 	}
 	
 	// enable signal handlers
 	signal(SIGINT, signalHandler);
 
 	// load our configuration file
-	g_ConfigManager=new ConfigManager("server.conf");
+	g_ConfigManager=new ConfigManager(prefix+"server.conf");
 	if (!g_ConfigManager->parse()) {
 		std::cout << "Error: unable to open server.conf for parsing!\n";
 		exit(1);
